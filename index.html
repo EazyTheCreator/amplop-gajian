@@ -239,7 +239,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 
 .pos-list,.env-list,.tx-list,.items{list-style:none;margin:0;padding:0}
 .pos-list{display:flex;flex-direction:column;gap:10px}
-.pos{display:grid;grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"dot name del" "dot val amt" ". ideal ideal" ". items items";column-gap:12px;row-gap:8px;align-items:center;
+.pos{display:grid;grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"dot name del" "dot val amt" ". grp grp" ". ideal ideal" ". items items";column-gap:12px;row-gap:8px;align-items:center;
   padding:14px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
 .pos > .ico{grid-area:dot;align-self:start}
 .pname{grid-area:name;border:0;border-bottom:2px solid transparent;background:transparent;padding:2px 0;font-weight:800;font-size:1rem;min-width:0;width:100%}
@@ -252,6 +252,11 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 .pnum{border:2px solid var(--line);border-radius:10px;background:var(--surface-2);padding:5px 9px;width:100%;max-width:130px;min-width:0;font-variant-numeric:tabular-nums;font-weight:600}
 .pnum:focus{outline:none;border-color:var(--accent)}
 .pfrom{font-size:.8rem;color:var(--muted)}
+.pgrp{grid-area:grp;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:.8rem;color:var(--muted)}
+.pgrp select{width:auto;min-height:34px;padding:4px 10px;border-radius:10px;font-size:.82rem;font-weight:700;color:var(--ink)}
+.pgrp label{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.pgrp .pg-t{width:64px;min-height:34px;padding:4px 8px;border:2px solid var(--line);border-radius:10px;background:var(--surface-2);text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.pgrp .pg-t:focus{outline:none;border-color:var(--accent)}
 .pamt{grid-area:amt;text-align:right;font-family:var(--f-display);font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pamt.preview{color:var(--muted);font-weight:600}
 .pdel{grid-area:del;border:0;background:transparent;color:var(--muted);font-size:.8rem;font-weight:600;padding:4px 8px;border-radius:999px;white-space:nowrap}
@@ -509,7 +514,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         </ul>
         <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase ideal dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
         <p><strong>Gaji mingguan.</strong> Pilih skema Mingguan jika penghasilan Anda diterima per minggu, misalnya pekerja harian, pengemudi daring, atau pekerja lepas. Total sebulan dihitung dari gaji per minggu dikalikan jumlah hari gajian di bulan tersebut (4 atau 5 kali). Karena penghasilan mingguan cenderung naik turun, acuan dana darurat dinaikkan menjadi 7–12% dan hiburan dibatasi maksimal 12%. Biaya bulanan seperti sewa sebaiknya dicicil sedikit setiap minggu, dan di bulan dengan lima kali gajian, gajian kelima sebaiknya langsung masuk tabungan atau dana darurat.</p>
-        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan ideal begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Semua amplop ikut otomatis, termasuk tabungan dan dana darurat. Urutan pengurangannya: hiburan, makan di luar, dan langganan lebih dulu; lalu kebutuhan lain dihemat hingga 85% dari acuannya; lalu sedekah, tabungan, dan dana darurat sampai batas minimalnya; baru kemudian kebutuhan lain hingga 70%. Tabungan dan dana darurat tidak menjadi prioritas pengurangan, dan jika ada sisa, sisanya justru masuk ke tabungan dan dana darurat.</p>
+        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan ideal begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Semua amplop ikut otomatis, termasuk tabungan dan dana darurat. Urutan pengurangannya: hiburan, makan di luar, dan langganan lebih dulu; lalu kebutuhan lain dihemat hingga 85% dari acuannya; lalu sedekah, tabungan, dan dana darurat sampai batas minimalnya; baru kemudian kebutuhan lain hingga 70%. Amplop yang Anda tambahkan sendiri ikut otomatis setelah diberi kelompok (kebutuhan, tabungan, keinginan, atau sosial) dan acuan persennya. Tabungan dan dana darurat tidak menjadi prioritas pengurangan, dan jika ada sisa, sisanya justru masuk ke tabungan dan dana darurat.</p>
         <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. </p>
         <p><strong>Utang dan cicilan.</strong> Isi pada kolom tersendiri di atas. Utang dibayar lebih dulu dari pemasukan, lalu seluruh persentase ideal dihitung dari sisa pemasukan setelah utang. Total cicilan sebaiknya tidak melebihi 30% pemasukan; di atas 40% sudah tergolong berat.</p>
         <p><strong>Sisa bulan lalu.</strong> Uang yang tersisa di akhir bulan (pemasukan dikurangi utang dan pengeluaran yang dicatat) otomatis ditambahkan ke total uang bulan berikutnya.</p>
@@ -717,8 +722,16 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   ];
   // Penyesuaian acuan untuk gaji mingguan: dana darurat lebih besar, hiburan lebih ketat.
   const WEEKLY_ADJ = { k8:{min:7, max:12, t:10}, u9:{min:7, max:12, t:10}, k9:{max:12, t:12}, u10:{max:12, t:12} };
+  const GROUP_DEF = { need:5, save:5, want:5, give:2.5 };
+  // Acuan untuk amplop buatan sendiri yang diberi kelompok: kebutuhan & keinginan sebagai batas maksimal,
+  // tabungan & sosial sebagai batas minimal (dikurangi paling jauh hingga separuhnya sebelum tahap akhir).
+  function customIdeal(p){
+    const t = p.t > 0 ? p.t : GROUP_DEF[p.g];
+    return (p.g === 'save' || p.g === 'give') ? { g:p.g, t, min:t, max:null, floor:t / 2, custom:true } : { g:p.g, t, min:null, max:t, custom:true };
+  }
   function idealOf(id){
-    const r = IDEAL[id]; if (!r) return null;
+    const r = IDEAL[id];
+    if (!r) { const p = typeof settings !== 'undefined' ? settings.pos.find(x => x.id === id) : null; return p && p.g ? customIdeal(p) : null; }
     return (typeof settings !== 'undefined' && settings.freq === 'minggu' && WEEKLY_ADJ[id]) ? Object.assign({}, r, WEEKLY_ADJ[id]) : r;
   }
   const rangeText = (r) => r.min != null && r.max != null ? pctFmt(r.min) + '–' + pctFmt(r.max) + '%' : r.min != null ? 'min. ' + pctFmt(r.min) + '%' : 'maks. ' + pctFmt(r.max) + '%';
@@ -808,7 +821,9 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         items: (Array.isArray(p.items) ? p.items : []).map(x => ({ id:String(x.id), name:String(x.name ?? ''), value: Number(x.value) || 0,
           m: x.m !== undefined ? !!x.m : (DEFAULT_VAL[x.id] !== undefined && (Number(x.value) || 0) !== DEFAULT_VAL[x.id]) })),
         pagu: Number(p.pagu) || 0,
-        m: p.m !== undefined ? !!p.m : p.type === 'fix'
+        m: p.m !== undefined ? !!p.m : p.type === 'fix',
+        g: ['need', 'save', 'want', 'give'].includes(p.g) ? p.g : '',
+        t: Math.max(0, Math.min(100, Number(p.t) || 0))
       })),
       lastIncome: Number(d.lastIncome) || 0,
       auto: d.auto !== false,
@@ -965,7 +980,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
           parts.push({ kind:'item', id:x.id, pid:p.id, name:x.name || p.name, g:r.g, want: WANT_ITEMS.has(x.id), w: r.t * ITEM_SHARE[x.id] / tot, min:0 });
         });
       } else if (p.m) manual += manualEnvAmt(p, inc);
-      else parts.push({ kind:'env', id:p.id, pid:p.id, name:p.name, g:r.g, want: r.g === 'want', w: r.t, min: r.min || 0 });
+      else parts.push({ kind:'env', id:p.id, pid:p.id, name:p.name, g:r.g, want: r.g === 'want', w: r.t, min: r.floor != null ? r.floor : (r.min || 0) });
     });
     parts.forEach(x => { x.target = B * x.w / 100; x.amt = x.target; });
     const avail = B - manual;
@@ -1124,6 +1139,17 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         '<div class="pideal"></div>' +
         '<ul class="items"></ul>';
       li.prepend(icoEl(iconKey(p), p.c));
+      if (!IDEAL[p.id]) {
+        const gp = document.createElement('div'); gp.className = 'pgrp';
+        gp.innerHTML = '<select class="pg-sel" aria-label="Kelompok amplop">' +
+          '<option value="">Pilih kelompok agar ikut otomatis</option><option value="need">Kebutuhan</option>' +
+          '<option value="save">Tabungan</option><option value="want">Keinginan</option><option value="give">Sosial / donasi</option></select>' +
+          '<label>Acuan <input class="pg-t" inputmode="decimal" autocomplete="off">%</label>';
+        gp.querySelector('.pg-sel').value = p.g;
+        const lab = gp.querySelector('label'); lab.hidden = !p.g;
+        const t = gp.querySelector('.pg-t'); t.id = 'pgt-' + p.id; t.value = p.g ? pctFmt(p.t > 0 ? p.t : GROUP_DEF[p.g]) : '';
+        li.appendChild(gp);
+      }
       const nm = li.querySelector('.pname'); nm.value = p.name; nm.id = 'pname-' + p.id;
       li.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === p.type)));
       const num = li.querySelector('.pnum'); num.id = 'pnum-' + p.id;
@@ -1176,7 +1202,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       const box = row.querySelector('.pideal'); box.textContent = '';
       const span = document.createElement('span');
       if (!r) { span.textContent = 'Amplop tambahan, tanpa acuan ideal · ' + pctFmt(Math.round(share * 10) / 10) + '% dari pemasukan'; box.appendChild(span); return; }
-      span.textContent = 'Ideal ' + rangeText(r) + (preview ? '' : ' · saat ini ' + pctFmt(Math.round(share * 10) / 10) + '%');
+      span.textContent = (r.custom ? 'Acuan Anda ' : 'Ideal ') + rangeText(r) + (preview ? '' : ' · saat ini ' + pctFmt(Math.round(share * 10) / 10) + '%');
       box.appendChild(span);
       if (isWeekly() && !preview) { const w = document.createElement('span'); w.className = 'tag low'; w.textContent = '≈ ' + rpShort(Math.round(amt / weeksNow())) + '/minggu'; box.appendChild(w); }
       if (!preview) {
@@ -1615,6 +1641,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const li = e.target.closest('.pos'); if (!li) return;
     const p = settings.pos.find(x => x.id === li.dataset.id); if (!p) return;
     if (e.target.classList.contains('pname')) { p.name = e.target.value; saveSettings(); return; }
+    if (e.target.classList.contains('pg-t')) {
+      const raw = e.target.value.replace(/[^\d,.]/g, ''); if (raw !== e.target.value) e.target.value = raw;
+      p.t = pctParse(raw); p.m = false; saveSettings(); refreshBagiNumbers(); return;
+    }
     if (e.target.classList.contains('pagu-in')) { const v = digits(e.target.value); e.target.value = v ? fmt(v) : ''; p.pagu = v; saveSettings(); refreshBagiNumbers(); return; }
     const row = e.target.closest('.item');
     if (row) {
@@ -1629,6 +1659,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       p.m = true;
       saveSettings(); refreshBagiNumbers();
     }
+  });
+  posList.addEventListener('change', e => {
+    if (!e.target.classList.contains('pg-sel')) return;
+    const p = settings.pos.find(x => x.id === e.target.closest('.pos').dataset.id); if (!p) return;
+    p.g = e.target.value;
+    if (p.g) { if (!(p.t > 0)) p.t = GROUP_DEF[p.g]; p.m = false; }
+    saveSettings(); renderBagi();
   });
   posList.addEventListener('focusin', e => {
     if (e.target.matches('.inum, .pnum')) { const el = e.target; setTimeout(() => { try { el.select(); } catch (er) {} }, 0); }
@@ -1712,7 +1749,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const used = settings.pos.map(p => p.c);
     let c = 0; for (let k = 1; k <= 10; k++) { if (!used.includes(k)) { c = k; break; } }
     if (!c) c = (settings.pos.length % 10) + 1;
-    const p = { id: newId(), name: 'Amplop baru', type: 'fix', value: 0, c, items: [] };
+    const p = { id: newId(), name: 'Amplop baru', type: 'fix', value: 0, c, items: [], pagu: 0, m: false, g: '', t: 0 };
     settings.pos.push(p); saveSettings(); renderBagi();
     const nm = document.getElementById('pname-' + p.id); if (nm) { nm.focus(); nm.select(); }
   });
