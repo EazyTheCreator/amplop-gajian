@@ -9,3 +9,20 @@ Aplikasi web sederhana untuk membagi gaji ke amplop anggaran dan mencatat pengel
 - Cadangan dan pemulihan data melalui file `.json`
 
 Buka aplikasinya di: https://eazythecreator.github.io/amplop-gajian/
+
+## Struktur
+
+| File | Isi |
+|---|---|
+| `index.html` | Kerangka halaman |
+| `styles.css` | Tampilan (mode terang dan gelap) |
+| `app.js` | Seluruh logika aplikasi |
+| `tests/test_app.py` | Tes otomatis perhitungan utama |
+
+## Menjalankan tes
+
+```bash
+pip install playwright
+python -m playwright install chromium
+python tests/test_app.py
+```
