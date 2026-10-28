@@ -509,7 +509,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         </ul>
         <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase ideal dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
         <p><strong>Gaji mingguan.</strong> Pilih skema Mingguan jika penghasilan Anda diterima per minggu, misalnya pekerja harian, pengemudi daring, atau pekerja lepas. Total sebulan dihitung dari gaji per minggu dikalikan jumlah hari gajian di bulan tersebut (4 atau 5 kali). Karena penghasilan mingguan cenderung naik turun, acuan dana darurat dinaikkan menjadi 7–12% dan hiburan dibatasi maksimal 12%. Biaya bulanan seperti sewa sebaiknya dicicil sedikit setiap minggu, dan di bulan dengan lima kali gajian, gajian kelima sebaiknya langsung masuk tabungan atau dana darurat.</p>
-        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan ideal begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Urutan pengurangannya: hiburan, makan di luar, dan langganan lebih dulu; lalu tabungan, dana darurat, dan sedekah sampai batas minimalnya; lalu kebutuhan lain hingga 70% dari acuannya. Jika ada sisa, sisanya masuk ke tabungan.</p>
+        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan ideal begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Semua amplop ikut otomatis, termasuk tabungan dan dana darurat. Urutan pengurangannya: hiburan, makan di luar, dan langganan lebih dulu; lalu kebutuhan lain dihemat hingga 85% dari acuannya; lalu sedekah, tabungan, dan dana darurat sampai batas minimalnya; baru kemudian kebutuhan lain hingga 70%. Tabungan dan dana darurat tidak menjadi prioritas pengurangan, dan jika ada sisa, sisanya justru masuk ke tabungan dan dana darurat.</p>
         <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. </p>
         <p><strong>Utang dan cicilan.</strong> Isi pada kolom tersendiri di atas. Utang dibayar lebih dulu dari pemasukan, lalu seluruh persentase ideal dihitung dari sisa pemasukan setelah utang. Total cicilan sebaiknya tidak melebihi 30% pemasukan; di atas 40% sudah tergolong berat.</p>
         <p><strong>Sisa bulan lalu.</strong> Uang yang tersisa di akhir bulan (pemasukan dikurangi utang dan pengeluaran yang dicatat) otomatis ditambahkan ke total uang bulan berikutnya.</p>
@@ -971,9 +971,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const avail = B - manual;
     let gap = parts.reduce((s, x) => s + x.amt, 0) - avail, deficit = 0;
     if (gap > 0) {
+      // Urutan pengurangan: tabungan & dana darurat bukan prioritas, jadi dikurangi setelah
+      // keinginan dan setelah kebutuhan fleksibel dihemat lebih dulu.
       const tiers = [
         x => x.want ? 0 : null,
-        x => (x.g === 'save' || x.g === 'give') ? B * x.min / 100 : null,
+        x => (x.g === 'need' && !x.want) ? x.target * 0.85 : null,
+        x => x.g === 'give' ? B * x.min / 100 : null,
+        x => x.g === 'save' ? B * x.min / 100 : null,
         x => (x.g === 'need' && !x.want) ? x.target * 0.7 : null,
         x => (x.g === 'save' || x.g === 'give') ? 0 : null,
         () => 0
@@ -993,7 +997,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       const tw = pool.reduce((s, x) => s + x.w, 0);
       pool.forEach(x => { x.amt += (-gap) * x.w / tw; });
     }
-    parts.forEach(x => { x.amt = Math.max(0, round5k(x.amt)); });
+    parts.forEach(x => { x.pre = x.amt; x.amt = Math.max(0, round5k(x.amt)); });
     if (parts.length && avail > 0 && !deficit) {
       const diff = avail - parts.reduce((s, x) => s + x.amt, 0);
       if (diff) {
@@ -1006,7 +1010,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     parts.forEach(x => {
       (x.kind === 'env' ? env : item)[x.id] = x.amt;
       target[x.id] = round5k(x.target);
-      if (target[x.id] - x.amt >= 5000) cuts.push({ name:x.name, by: target[x.id] - x.amt });
+      // Hanya pengurangan sungguhan yang dilaporkan, bukan selisih pembulatan.
+      if (x.target - x.pre >= 5000) cuts.push({ id:x.id, name:x.name, by: round5k(x.target - x.pre) });
     });
     planCache = { key, val: { env, item, target, cuts, deficit: Math.max(deficit, manual - B > 0 ? manual - B : 0), manual, B } };
     return planCache.val;
@@ -1214,7 +1219,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
             box.append(t, u);
           } else {
             const t = document.createElement('span'); t.className = 'tag ok'; t.textContent = 'Otomatis'; box.appendChild(t);
-            const cut = (pl.target[p.id] || 0) - (pl.env[p.id] || 0);
+            const cut = (pl.cuts.find(c => c.id === p.id) || {}).by || 0;
             if (!preview && cut >= 5000) { const c = document.createElement('span'); c.className = 'tag warn'; c.textContent = 'Disesuaikan −' + rpShort(cut); box.appendChild(c); }
           }
         }
@@ -1238,7 +1243,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
             box.append(t, u);
           } else {
             const t = document.createElement('span'); t.className = 'tag ok'; t.textContent = 'Otomatis'; box.appendChild(t);
-            const cut = (pl.target[x.id] || 0) - (pl.item[x.id] || 0);
+            const cut = (pl.cuts.find(c => c.id === x.id) || {}).by || 0;
             if (!preview && cut >= 5000) { const c = document.createElement('span'); c.textContent = 'disesuaikan −' + rpShort(cut) + ' dari acuan'; box.appendChild(c); }
           }
         });
