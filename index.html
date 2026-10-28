@@ -108,9 +108,32 @@ h2{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
 .ring-txt small{font-size:.68rem;opacity:.85}
 
 /* Tab */
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);padding:5px;border-radius:999px;box-shadow:var(--shadow)}
-.tabs button{border:0;border-radius:999px;padding:10px 8px;background:transparent;font-weight:700;color:var(--muted);font-size:.9rem}
-.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);padding:5px;border-radius:999px;box-shadow:var(--shadow)}
+.tabs::before,.freq::before{content:"";position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:999px;background:var(--accent);
+  transition:transform .42s cubic-bezier(.3,1.3,.5,1)}
+.tabs[data-tab="catat"]::before{transform:translateX(calc(100% + 4px))}
+.tabs button{position:relative;z-index:1;border:0;border-radius:999px;padding:10px 8px;background:transparent;font-weight:700;color:var(--muted);font-size:.9rem;transition:color .25s}
+.tabs button[aria-selected="true"]{color:var(--accent-ink)}
+
+/* Skema gaji */
+.lbl-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.freq{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface-2);border:2px solid var(--line);border-radius:999px;padding:3px}
+.freq::before{top:3px;bottom:3px;left:3px;width:calc(50% - 5px)}
+.freq[data-f="minggu"]::before{transform:translateX(calc(100% + 4px))}
+.freq button{position:relative;z-index:1;border:0;background:transparent;border-radius:999px;padding:5px 13px;font-size:.78rem;font-weight:700;color:var(--muted);transition:color .25s}
+.freq button[aria-pressed="true"]{color:var(--accent-ink)}
+.weekly{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:var(--r-sm);padding:12px 14px}
+.wk-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:.86rem;font-weight:600}
+.wk-row label{font-size:.86rem}
+.wk-row select{width:auto;min-height:38px;padding:6px 10px;font-weight:700}
+.stepper{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:2px}
+.stepper button{width:32px;height:32px;border:0;border-radius:50%;background:transparent;font-size:1.1rem;font-weight:700;color:var(--accent)}
+.stepper button:hover{background:var(--accent-soft)}
+.stepper button:disabled{opacity:.35;cursor:default;background:transparent}
+.stepper b{min-width:22px;text-align:center;font-family:var(--f-display);font-size:1.05rem}
+.wk-total{margin:0;font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.wk-total b{color:var(--ink);font-family:var(--f-display);font-size:1rem}
+.wk-auto{font-size:.78rem}
 .panel{display:flex;flex-direction:column;gap:14px}
 
 /* Kartu & isian */
@@ -131,7 +154,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
 input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .link{border:0;background:none;padding:0;color:var(--accent);font-weight:700;font-size:.86rem;text-align:left;text-decoration:underline;text-underline-offset:3px}
-.flabel .step,.field > label .step{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;margin-right:6px;vertical-align:1px}
+.flabel .step,label .step{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;margin-right:6px;vertical-align:1px}
 .fhint{font-size:.8rem;color:var(--muted)}
 
 /* Template */
@@ -319,6 +342,18 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   .tpl{grid-template-columns:1fr}
   .cat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+/* Transisi: konten mengalir dari bawah ke atas */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.top,.hero,.tabs{animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+.hero{animation-delay:.06s}.tabs{animation-delay:.12s}
+.flow > *{animation:rise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i, 0) * 45ms)}
+.flow .bar i{transform-origin:left center;animation:grow .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:.2s}
+.tpl-confirm,.sub-wrap,.weekly,.note,.guide-body,#copyFallback,.wk-hint{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
+.cat[aria-checked="true"] .ico,.sub[aria-checked="true"] .ico{animation:pop .4s cubic-bezier(.3,1.4,.5,1)}
+.cat,.sub,.tpl button,.qa button,.dchip,.ghost,.seg button{transition:transform .15s, background .2s, border-color .2s, color .2s}
+.qa button:active,.dchip:active,.sub:active,.cat:active{transform:scale(.95)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -355,7 +390,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     </div>
   </section>
 
-  <nav class="tabs" role="tablist" aria-label="Menu">
+  <nav class="tabs" role="tablist" aria-label="Menu" data-tab="bagi">
     <button type="button" role="tab" id="tabBagi" aria-controls="panelBagi" aria-selected="true">Bagi gaji</button>
     <button type="button" role="tab" id="tabCatat" aria-controls="panelCatat" aria-selected="false">Catat pengeluaran</button>
   </nav>
@@ -374,8 +409,32 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         </div>
       </div>
       <div class="field">
-        <label for="inGaji"><span class="step">2</span>Gaji bulan ini</label>
+        <div class="lbl-row">
+          <label for="inGaji"><span class="step">2</span><span id="gajiLblText">Gaji bulan ini</span></label>
+          <div class="freq" id="freq" role="group" aria-label="Skema gaji" data-f="bulan">
+            <button type="button" data-f="bulan" aria-pressed="true">Bulanan</button>
+            <button type="button" data-f="minggu" aria-pressed="false">Mingguan</button>
+          </div>
+        </div>
         <div class="money big"><span>Rp</span><input id="inGaji" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+        <div class="weekly" id="weeklyBox" hidden>
+          <div class="wk-row">
+            <label for="payday">Hari gajian</label>
+            <select id="payday">
+              <option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option><option value="4">Kamis</option>
+              <option value="5">Jumat</option><option value="6">Sabtu</option><option value="0">Minggu</option>
+            </select>
+          </div>
+          <div class="wk-row">
+            <span id="wkCountLbl">Jumlah gajian bulan ini</span>
+            <div class="stepper" role="group" aria-labelledby="wkCountLbl">
+              <button type="button" id="wkMinus" aria-label="Kurangi jumlah gajian">−</button><b id="wkCount" aria-live="polite">4</b><button type="button" id="wkPlus" aria-label="Tambah jumlah gajian">+</button>
+            </div>
+          </div>
+          <p class="wk-total" id="wkTotal"></p>
+          <button type="button" class="link wk-auto" id="wkAuto" hidden>Hitung otomatis dari kalender</button>
+          <p class="fhint wk-hint" id="wkHint" hidden></p>
+        </div>
       </div>
       <div class="field">
         <label for="inLain">Pemasukan lain <span class="opt">(bonus, honorarium, proyek)</span></label>
@@ -405,6 +464,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
           <li><strong>Sedekah dan donasi, sekitar 2,5–5%.</strong></li>
         </ul>
         <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase ideal dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
+        <p><strong>Gaji mingguan.</strong> Pilih skema Mingguan jika penghasilan Anda diterima per minggu, misalnya pekerja harian, pengemudi daring, atau pekerja lepas. Total sebulan dihitung dari gaji per minggu dikalikan jumlah hari gajian di bulan tersebut (4 atau 5 kali). Karena penghasilan mingguan cenderung naik turun, acuan dana darurat dinaikkan menjadi 7–12% dan hiburan dibatasi maksimal 12%. Biaya bulanan seperti sewa sebaiknya dicicil sedikit setiap minggu, dan di bulan dengan lima kali gajian, gajian kelima sebaiknya langsung masuk tabungan atau dana darurat.</p>
         <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. Jika memiliki cicilan, total cicilan sebaiknya tidak melebihi 30% pemasukan.</p>
         <p class="fine">Angka di atas adalah pedoman umum perencanaan keuangan pribadi, bukan nasihat keuangan profesional. Sesuaikan dengan kondisi dan biaya hidup di kota Anda.</p>
       </div>
@@ -607,6 +667,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     {g:'want', name:'Hiburan & gaya hidup', sub:'', min:null, max:15},
     {g:'give', name:'Sedekah & donasi', sub:'', min:2.5, max:null}
   ];
+  // Penyesuaian acuan untuk gaji mingguan: dana darurat lebih besar, hiburan lebih ketat.
+  const WEEKLY_ADJ = { k8:{min:7, max:12, t:10}, u9:{min:7, max:12, t:10}, k9:{max:12, t:12}, u10:{max:12, t:12} };
+  function idealOf(id){
+    const r = IDEAL[id]; if (!r) return null;
+    return (typeof settings !== 'undefined' && settings.freq === 'minggu' && WEEKLY_ADJ[id]) ? Object.assign({}, r, WEEKLY_ADJ[id]) : r;
+  }
   const rangeText = (r) => r.min != null && r.max != null ? pctFmt(r.min) + '–' + pctFmt(r.max) + '%' : r.min != null ? 'min. ' + pctFmt(r.min) + '%' : 'maks. ' + pctFmt(r.max) + '%';
   // Hasil: [kelas tag, teks tag]; tabungan di bawah minimum dianggap perlu perhatian, kebutuhan di bawah rentang dianggap hemat.
   function judge(share, r, g){
@@ -677,6 +743,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const tpl = d.tpl === 'umum' || d.tpl === 'kost' ? d.tpl : (pos.some(p => /^u\d+$/.test(String(p && p.id))) ? 'umum' : 'kost');
     return {
       tpl,
+      freq: d.freq === 'minggu' ? 'minggu' : 'bulan',
+      payday: Number.isInteger(Number(d.payday)) && Number(d.payday) >= 0 && Number(d.payday) <= 6 && d.payday !== null && d.payday !== undefined && d.payday !== '' ? Number(d.payday) : 5,
       pos: pos.map(p => ({
         id:String(p.id), name:String(p.name ?? ''),
         type: p.type === 'fix' || p.type === 'rinci' ? p.type : 'pct',
@@ -685,7 +753,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         items: (Array.isArray(p.items) ? p.items : []).map(x => ({ id:String(x.id), name:String(x.name ?? ''), value: Number(x.value) || 0 })),
         pagu: Number(p.pagu) || 0
       })),
-      lastIncome: Number(d.lastIncome) || 0
+      lastIncome: Number(d.lastIncome) || 0,
+      lastWeekly: Number(d.lastWeekly) || 0
     };
   }
   function normMonth(d){
@@ -693,6 +762,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     return {
       gaji: Number(d.gaji) || 0,
       lain: Number(d.lain) || 0,
+      gajiMinggu: Number(d.gajiMinggu) || 0,
+      minggu: Math.max(0, Math.min(6, Number(d.minggu) || 0)),
       tx: (Array.isArray(d.tx) ? d.tx : []).map(t => ({ id:String(t.id), date:String(t.date || ''), posId:String(t.posId || ''), itemId:String(t.itemId || ''), desc:String(t.desc || ''), amt: Number(t.amt) || 0 }))
     };
   }
@@ -782,8 +853,19 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   const baseIncome = () => income() || PREVIEW_INCOME;
   const itemsSum = (p) => p.items.reduce((s, x) => s + x.value, 0);
   const allocOf = (p, inc) => p.type === 'fix' ? p.value : p.type === 'rinci' ? itemsSum(p) : Math.round(inc * p.value / 100);
+  function paydaysIn(y, m, wd){
+    const last = new Date(y, m, 0).getDate(); let n = 0;
+    for (let d = 1; d <= last; d++) if (new Date(y, m - 1, d).getDay() === wd) n++;
+    return n;
+  }
+  const isWeekly = () => settings.freq === 'minggu';
+  const weeksNow = () => month.minggu || paydaysIn(curY, curM, settings.payday);
+  function syncWeekly(){ if (isWeekly() && month.gajiMinggu) month.gaji = month.gajiMinggu * weeksNow(); }
+  // Bulan yang dulu diisi dengan skema bulanan: turunkan gaji per minggu sebelum jumlah gajian diubah.
+  function ensureWeekly(){ if (isWeekly() && !month.gajiMinggu && month.gaji) month.gajiMinggu = Math.round(month.gaji / weeksNow() / 1000) * 1000; }
+  const weeklyAmt = () => month.gajiMinggu || (month.gaji ? Math.round(month.gaji / weeksNow()) : 0);
   const totalAlloc = (inc) => settings.pos.reduce((s, p) => s + allocOf(p, inc), 0);
-  const idealBudget = (p, inc) => IDEAL[p.id] ? round5k(inc * IDEAL[p.id].t / 100) : 0;
+  const idealBudget = (p, inc) => idealOf(p.id) ? round5k(inc * idealOf(p.id).t / 100) : 0;
   const paguOf = (p, inc) => (Number(p.pagu) > 0 ? Number(p.pagu) : idealBudget(p, inc));
   // Saran per rincian: pagu dikurangi rincian tanpa acuan (mis. cicilan), lalu dibagi menurut porsi ideal.
   function itemSuggestions(p, inc){
@@ -811,11 +893,36 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   const monthLabel = () => new Intl.DateTimeFormat('id-ID', { month:'long', year:'numeric' }).format(new Date(curY, curM - 1, 1));
 
   /* ---------- Render ---------- */
+  const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Memutar animasi "mengalir dari bawah" untuk isi sebuah wadah, sekali saja.
+  function flow(el){
+    if (!el || reduceMotion()) return;
+    clearTimeout(el._flowT);
+    el.classList.remove('flow');
+    [...el.children].forEach((c, i) => c.style.setProperty('--i', String(Math.min(i, 12))));
+    void el.offsetWidth;
+    el.classList.add('flow');
+    el._flowT = setTimeout(() => el.classList.remove('flow'), 1400);
+  }
+  let shownLeft = null, leftRaf = 0;
+  function animateLeft(target){
+    const el = $('#sLeft');
+    if (shownLeft === null || reduceMotion()) { shownLeft = target; el.textContent = rp(target); return; }
+    const from = shownLeft, t0 = performance.now(), dur = 500;
+    cancelAnimationFrame(leftRaf);
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      shownLeft = Math.round(from + (target - from) * e);
+      el.textContent = rp(shownLeft);
+      if (k < 1) leftRaf = requestAnimationFrame(step);
+    };
+    leftRaf = requestAnimationFrame(step);
+  }
   function renderSummary(){
     const inc = income(), out = totalSpent();
     $('#sIn').textContent = rp(inc);
     $('#sOut').textContent = rp(out);
-    const left = $('#sLeft'); left.textContent = rp(inc - out); left.classList.toggle('neg', inc - out < 0);
+    const left = $('#sLeft'); animateLeft(inc - out); left.classList.toggle('neg', inc - out < 0);
     const ratio = inc ? out / inc : 0, C = 2 * Math.PI * 48, fg = $('#ringFg');
     fg.style.strokeDasharray = String(C); fg.style.strokeDashoffset = String(C * (1 - Math.min(1, ratio)));
     $('#ringPct').textContent = inc ? Math.round(ratio * 100) + '%' : '–';
@@ -825,7 +932,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 
   function renderBagi(){
     const g = $('#inGaji'), l = $('#inLain');
-    if (document.activeElement !== g) g.value = month.gaji ? fmt(month.gaji) : '';
+    const wk = isWeekly(), gv = wk ? weeklyAmt() : month.gaji;
+    if (document.activeElement !== g) g.value = gv ? fmt(gv) : '';
+    $('#gajiLblText').textContent = wk ? 'Gaji per minggu' : 'Gaji bulan ini';
+    const fq = $('#freq'); fq.dataset.f = settings.freq;
+    fq.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === settings.freq)));
+    $('#weeklyBox').hidden = !wk;
+    if (wk) $('#payday').value = String(settings.payday);
     if (document.activeElement !== l) l.value = month.lain ? fmt(month.lain) : '';
     document.querySelectorAll('.tpl button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tpl === settings.tpl)));
     const list = $('#posList');
@@ -893,13 +1006,14 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       out.textContent = rp(amt);
       out.classList.toggle('preview', preview);
       const share = base ? amt / base * 100 : 0;
-      const r = IDEAL[p.id];
+      const r = idealOf(p.id);
       groupPct[r ? r.g : 'other'] += share;
       const box = row.querySelector('.pideal'); box.textContent = '';
       const span = document.createElement('span');
       if (!r) { span.textContent = 'Amplop tambahan, tanpa acuan ideal · ' + pctFmt(Math.round(share * 10) / 10) + '% dari pemasukan'; box.appendChild(span); return; }
       span.textContent = 'Ideal ' + rangeText(r) + (preview ? '' : ' · saat ini ' + pctFmt(Math.round(share * 10) / 10) + '%');
       box.appendChild(span);
+      if (isWeekly() && !preview) { const w = document.createElement('span'); w.className = 'tag low'; w.textContent = '≈ ' + rpShort(Math.round(amt / weeksNow())) + '/minggu'; box.appendChild(w); }
       if (!preview) {
         const [cls, txt] = judge(share, r, r.g);
         const tag = document.createElement('span'); tag.className = 'tag ' + cls; tag.textContent = txt; box.appendChild(tag);
@@ -922,7 +1036,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         if (preview) info.textContent = 'Isi gaji terlebih dahulu untuk menghitung pagu dan saran rincian.';
         else if (!pagu) info.textContent = 'Isi pagu untuk mendapatkan saran nominal rincian.';
         else {
-          const src = p.pagu > 0 ? 'Pagu manual. ' : (ideal ? 'Mengikuti ideal ' + pctFmt(IDEAL[p.id].t) + '% dari pemasukan. ' : '');
+          const src = p.pagu > 0 ? 'Pagu manual. ' : (ideal ? 'Mengikuti ideal ' + pctFmt(idealOf(p.id).t) + '% dari pemasukan. ' : '');
           info.appendChild(document.createTextNode(src + 'Terisi ' + rp(filled) + ' dari ' + rp(pagu) + ' · '));
           const st = document.createElement('span');
           const gap = pagu - filled;
@@ -982,8 +1096,25 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     else if (rest > 0) { pill.className = 'pill warn'; pill.textContent = 'Sisa ' + rp(rest) + ' belum dibagi'; }
     else { pill.className = 'pill bad'; pill.textContent = 'Melebihi pemasukan ' + rp(-rest); }
     const ul = $('#useLast');
-    if (month.gaji === 0 && settings.lastIncome > 0) { ul.hidden = false; ul.textContent = 'Pakai gaji terakhir (' + rp(settings.lastIncome) + ')'; }
-    else ul.hidden = true;
+    if (isWeekly()) {
+      if (month.gajiMinggu === 0 && month.gaji === 0 && settings.lastWeekly > 0) { ul.hidden = false; ul.textContent = 'Pakai gaji mingguan terakhir (' + rp(settings.lastWeekly) + ')'; }
+      else ul.hidden = true;
+      const n = weeksNow(), auto = paydaysIn(curY, curM, settings.payday);
+      $('#wkCount').textContent = String(n);
+      $('#wkMinus').disabled = n <= 1; $('#wkPlus').disabled = n >= 6;
+      const wt = $('#wkTotal'); wt.textContent = n + ' × ' + rp(weeklyAmt()) + ' = ';
+      const b = document.createElement('b'); b.textContent = rp(month.gajiMinggu ? month.gajiMinggu * n : month.gaji); wt.appendChild(b);
+      wt.appendChild(document.createTextNode(' sebulan'));
+      $('#wkAuto').hidden = !month.minggu || month.minggu === auto;
+      const dayName = $('#payday').selectedOptions[0] ? $('#payday').selectedOptions[0].textContent : '';
+      const h = $('#wkHint');
+      if (n >= 5) { h.hidden = false; h.textContent = 'Bulan ini ada ' + n + ' kali gajian. Gajian ke-5 sebaiknya langsung masuk tabungan atau dana darurat, karena pengeluaran bulanan sudah tertutup oleh empat gajian sebelumnya.'; }
+      else if (month.minggu && month.minggu !== auto) { h.hidden = false; h.textContent = 'Diubah manual. Menurut kalender, ' + monthLabel() + ' memiliki ' + auto + ' hari ' + dayName + '.'; }
+      else { h.hidden = false; h.textContent = 'Dihitung dari ' + n + ' hari ' + dayName + ' di ' + monthLabel() + '. Ubah jumlahnya bila jadwal gajian Anda berbeda.'; }
+    } else {
+      if (month.gaji === 0 && settings.lastIncome > 0) { ul.hidden = false; ul.textContent = 'Pakai gaji terakhir (' + rp(settings.lastIncome) + ')'; }
+      else ul.hidden = true;
+    }
     renderSummary();
   }
 
@@ -1147,7 +1278,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const b = e.target.closest('.cat'); if (!b) return;
     const p = settings.pos.find(x => x.id === b.dataset.pos); if (!p) return;
     $('#txPos').value = p.id + '|' + (p.type === 'rinci' && p.items[0] ? p.items[0].id : '');
-    renderCats();
+    renderCats(); flow($('#subGrid'));
   });
   $('#subGrid').addEventListener('click', e => {
     const b = e.target.closest('.sub'); if (!b) return;
@@ -1179,10 +1310,38 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   function bindMoney(el, set){
     el.addEventListener('input', () => { const v = digits(el.value); el.value = v ? fmt(v) : ''; set(v); });
   }
-  bindMoney($('#inGaji'), v => { month.gaji = v; if (v) { settings.lastIncome = v; saveSettings(); } saveMonth(); refreshBagiNumbers(); });
+  bindMoney($('#inGaji'), v => {
+    if (isWeekly()) { month.gajiMinggu = v; syncWeekly(); if (v) { settings.lastWeekly = v; saveSettings(); } }
+    else { month.gaji = v; if (v) { settings.lastIncome = v; saveSettings(); } }
+    saveMonth(); refreshBagiNumbers();
+  });
+  $('#freq').addEventListener('click', e => {
+    const b = e.target.closest('button[data-f]'); if (!b || b.dataset.f === settings.freq) return;
+    settings.freq = b.dataset.f;
+    if (isWeekly()) {
+      ensureWeekly(); syncWeekly(); saveMonth();
+    }
+    saveSettings(); renderBagi(); flow($('#posList'));
+  });
+  $('#payday').addEventListener('change', e => {
+    ensureWeekly(); settings.payday = Number(e.target.value); month.minggu = 0; syncWeekly();
+    saveSettings(); saveMonth(); refreshBagiNumbers();
+  });
+  const stepWeeks = (d) => {
+    ensureWeekly();
+    const n = Math.max(1, Math.min(6, weeksNow() + d));
+    month.minggu = n === paydaysIn(curY, curM, settings.payday) ? 0 : n; syncWeekly();
+    saveMonth(); refreshBagiNumbers();
+  };
+  $('#wkMinus').addEventListener('click', () => stepWeeks(-1));
+  $('#wkPlus').addEventListener('click', () => stepWeeks(1));
+  $('#wkAuto').addEventListener('click', () => { ensureWeekly(); month.minggu = 0; syncWeekly(); saveMonth(); refreshBagiNumbers(); });
   bindMoney($('#inLain'), v => { month.lain = v; saveMonth(); refreshBagiNumbers(); });
   bindMoney($('#txAmt'), () => {});
-  $('#useLast').addEventListener('click', () => { month.gaji = settings.lastIncome; saveMonth(); renderBagi(); });
+  $('#useLast').addEventListener('click', () => {
+    if (isWeekly()) { month.gajiMinggu = settings.lastWeekly; syncWeekly(); } else month.gaji = settings.lastIncome;
+    saveMonth(); renderBagi();
+  });
 
   const posList = $('#posList');
   posList.addEventListener('input', e => {
@@ -1298,7 +1457,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     if (!tplPending) return;
     settings.tpl = tplPending; settings.pos = normSettings({ pos: clone(TEMPLATES[tplPending].pos) }).pos;
     tplPending = null; $('#tplConfirm').hidden = true;
-    saveSettings(); renderBagi();
+    saveSettings(); renderBagi(); flow($('#posList'));
   });
 
   $('#autoIdeal').addEventListener('click', e => {
@@ -1306,11 +1465,11 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const reset = (t, ms) => { btn.textContent = t; setTimeout(() => { btn.classList.remove('confirm'); btn.textContent = label; }, ms); };
     const inc = income();
     if (!inc) { reset('Isi gaji terlebih dahulu', 2500); $('#inGaji').focus(); return; }
-    if (!settings.pos.some(p => IDEAL[p.id])) { reset('Pilih template di atas terlebih dahulu', 3000); return; }
+    if (!settings.pos.some(p => idealOf(p.id))) { reset('Pilih template di atas terlebih dahulu', 3000); return; }
     if (!btn.classList.contains('confirm')) { btn.classList.add('confirm'); reset('Timpa pembagian saat ini? Ketuk lagi', 3500); return; }
     btn.classList.remove('confirm'); btn.textContent = label;
     settings.pos.forEach(p => {
-      const r = IDEAL[p.id]; if (!r) return;
+      const r = idealOf(p.id); if (!r) return;
       const target = round5k(inc * r.t / 100);
       if (p.type === 'pct') p.value = r.t;
       else if (p.type === 'fix') p.value = target;
@@ -1325,7 +1484,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         if (diff) { const big = p.items.reduce((a, b) => b.value > a.value ? b : a); big.value = Math.max(0, big.value + diff); }
       }
     });
-    saveSettings(); renderBagi();
+    saveSettings(); renderBagi(); flow($('#posList'));
     reset('Terbagi sesuai acuan. Sesuaikan biaya tetap Anda', 4000);
   });
 
@@ -1355,7 +1514,11 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     $('#tabBagi').setAttribute('aria-selected', String(bagi));
     $('#tabCatat').setAttribute('aria-selected', String(!bagi));
     $('#panelBagi').hidden = !bagi; $('#panelCatat').hidden = bagi;
+    document.querySelector('.tabs').dataset.tab = t;
     if (bagi) renderBagi(); else renderCatat();
+    const panel = bagi ? $('#panelBagi') : $('#panelCatat');
+    flow(panel);
+    if (bagi) flow($('#posList')); else { flow($('#catGrid')); flow($('#envList')); }
   }
   $('#tabBagi').addEventListener('click', () => setTab('bagi'));
   $('#tabCatat').addEventListener('click', () => setTab('catat'));
@@ -1369,6 +1532,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     if (mode === 'db') { month = normMonth(null); subscribeMonth(); }
     else month = normMonth(localAll.months[curKey]);
     renderAll();
+    flow($('#panelBagi').hidden ? $('#envList') : $('#posList'));
   }
   $('#prevM').addEventListener('click', () => shiftMonth(-1));
   $('#nextM').addEventListener('click', () => shiftMonth(1));
@@ -1429,6 +1593,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   if (localAll.settings) settings = normSettings(localAll.settings);
   month = normMonth(localAll.months[curKey]);
   renderAll();
+  flow($('#panelBagi'));
   connect();
 })();
 </script>
