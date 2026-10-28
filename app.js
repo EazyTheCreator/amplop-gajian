@@ -1052,6 +1052,7 @@
     $('#mLabel').textContent = monthLabel();
     renderBagi();
     if (!$('#panelCatat').hidden) renderCatat();
+    if (!$('#panelLapor').hidden) renderReport();
     renderSummary();
   }
 
@@ -1365,19 +1366,20 @@
     const row = e.target.closest('.tx'); if (row) startEdit(row.dataset.id);
   });
 
+  const TABS = { bagi: ['#tabBagi', '#panelBagi'], catat: ['#tabCatat', '#panelCatat'], lapor: ['#tabLapor', '#panelLapor'] };
+  const currentTab = () => Object.keys(TABS).find(k => !$(TABS[k][1]).hidden) || 'bagi';
   function setTab(t){
-    const bagi = t === 'bagi';
-    $('#tabBagi').setAttribute('aria-selected', String(bagi));
-    $('#tabCatat').setAttribute('aria-selected', String(!bagi));
-    $('#panelBagi').hidden = !bagi; $('#panelCatat').hidden = bagi;
+    Object.keys(TABS).forEach(k => { $(TABS[k][0]).setAttribute('aria-selected', String(k === t)); $(TABS[k][1]).hidden = k !== t; });
     document.querySelector('.tabs').dataset.tab = t;
-    if (bagi) renderBagi(); else renderCatat();
-    const panel = bagi ? $('#panelBagi') : $('#panelCatat');
-    flow(panel);
-    if (bagi) flow($('#posList')); else { flow($('#catGrid')); flow($('#envList')); }
+    if (t === 'bagi') renderBagi(); else if (t === 'catat') renderCatat(); else renderReport();
+    flow($(TABS[t][1]));
+    if (t === 'bagi') flow($('#posList'));
+    else if (t === 'catat') { flow($('#catGrid')); flow($('#envList')); }
+    else flow($('#catBars'));
   }
   $('#tabBagi').addEventListener('click', () => setTab('bagi'));
   $('#tabCatat').addEventListener('click', () => setTab('catat'));
+  $('#tabLapor').addEventListener('click', () => setTab('lapor'));
 
   function shiftMonth(delta){
     if (timers.month || dirty.month) flush('month');
@@ -1422,6 +1424,119 @@
       ? 'Tercatat koreksi ' + rp(diff) + ' sebagai pengeluaran yang tidak tercatat. Sisa uang kini sama dengan saldo Anda.'
       : 'Tercatat koreksi +' + rp(-diff) + ' karena uang Anda lebih banyak dari catatan. Sisa uang kini sama dengan saldo Anda.';
     renderCatat();
+  });
+
+  /* ---------- Laporan ---------- */
+  const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const monthOf = (k) => k === curKey ? month : (localAll.months[k] ? normMonth(localAll.months[k]) : null);
+  const posListOf = (k) => k === curKey ? settings.pos : ((localAll.months[k] && localAll.months[k].plan && localAll.months[k].plan.pos) || globalS.pos);
+  function labelIn(t, pos){
+    if (t.posId === ADJ) return 'Koreksi saldo';
+    const p = pos.find(x => x.id === t.posId); if (!p) return 'Amplop terhapus';
+    const i = t.itemId && p.items && p.items.find(x => x.id === t.itemId);
+    return (p.name || 'Tanpa nama') + (i ? ' › ' + (i.name || 'Tanpa nama') : '');
+  }
+  const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.keys(attrs).forEach(a => e.setAttribute(a, attrs[a])); return e; };
+  function niceMax(v){ if (v <= 0) return 1000000; const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+  function renderTrend(){
+    const keys = []; for (let i = 5; i >= 0; i--) keys.push(addMonths(curKey, -i));
+    const rows = keys.map(k => {
+      const m = monthOf(k);
+      const inc = m ? m.gaji + m.lain : 0;
+      const ut = m ? (k === curKey ? utangNow() : (m.utang || 0)) : 0;
+      const out = m ? m.tx.reduce((s, t) => s + t.amt, 0) + (monthHasData(m) ? ut : 0) : 0;
+      return { k, inc, out };
+    });
+    const W = 340, H = 190, L = 40, R = 6, T = 10, Bm = 24, ch = H - T - Bm, cw = W - L - R;
+    const max = niceMax(Math.max(...rows.map(r => Math.max(r.inc, r.out))));
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'aria-hidden': 'true' });
+    for (let g = 0; g <= 4; g++) {
+      const y = T + ch - ch * g / 4, v = max * g / 4;
+      svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: y, y2: y, class: 'grid' }));
+      const tx = svgEl('text', { x: L - 6, y: y + 3, 'text-anchor': 'end' }); tx.textContent = v === 0 ? '0' : v >= 1e6 ? (Math.round(v / 1e5) / 10 + 'jt').replace('.', ',') : Math.round(v / 1e3) + 'rb'; svg.appendChild(tx);
+    }
+    const slot = cw / rows.length, bw = Math.min(16, slot / 3);
+    rows.forEach((r, i) => {
+      const cx = L + slot * i + slot / 2;
+      [[r.inc, 'var(--c1)', -bw - 1], [r.out, 'var(--c3)', 1]].forEach(([v, col, dx]) => {
+        const h = Math.max(v ? 2 : 0, ch * v / max);
+        svg.appendChild(svgEl('rect', { x: cx + dx, y: T + ch - h, width: bw, height: h, rx: 3, fill: col }));
+      });
+      const [y, m] = r.k.split('-').map(Number);
+      const lb = svgEl('text', { x: cx, y: H - 8, 'text-anchor': 'middle' }); lb.textContent = SHORT[m - 1] + (m === 1 || i === 0 ? " '" + String(y).slice(2) : ''); svg.appendChild(lb);
+    });
+    const box = $('#trendChart'); box.textContent = ''; box.appendChild(svg);
+    box.setAttribute('aria-label', 'Pemasukan dan pengeluaran 6 bulan terakhir: ' + rows.map(r => monthName(r.k) + ' masuk ' + rp(r.inc) + ', keluar ' + rp(r.out)).join('; '));
+    const used = rows.filter(r => r.inc || r.out);
+    const avgOut = used.length ? used.reduce((s, r) => s + r.out, 0) / used.length : 0;
+    const totIn = used.reduce((s, r) => s + r.inc, 0), totOut = used.reduce((s, r) => s + r.out, 0);
+    const st = $('#trendStats'); st.textContent = '';
+    [['Rata-rata pengeluaran', rp(Math.round(avgOut))], ['Total sisa 6 bulan', rp(totIn - totOut)], ['Porsi tersisa', totIn ? pctFmt(Math.round((totIn - totOut) / totIn * 1000) / 10) + '%' : '–']]
+      .forEach(([a, b]) => { const d = document.createElement('div'); d.className = 'stat'; const s1 = document.createElement('span'); s1.textContent = a; const s2 = document.createElement('b'); s2.textContent = b; d.append(s1, s2); st.appendChild(d); });
+  }
+  function renderCatBars(){
+    $('#catMonth').textContent = monthLabel();
+    const spent = spentBy(), total = month.tx.filter(t => t.posId !== ADJ).reduce((s, t) => s + t.amt, 0);
+    const list = $('#catBars'); list.textContent = '';
+    const rows = settings.pos.map(p => ({ p, v: spent[p.id] || 0 })).filter(r => r.v > 0).sort((a, b) => b.v - a.v);
+    const adj = month.tx.filter(t => t.posId === ADJ).reduce((s, t) => s + t.amt, 0);
+    if (!rows.length && !adj) { const e = document.createElement('p'); e.className = 'fhint'; e.textContent = 'Belum ada pengeluaran di ' + monthLabel() + '.'; list.appendChild(e); return; }
+    const max = rows.length ? rows[0].v : 1;
+    rows.forEach(({ p, v }) => {
+      const li = document.createElement('li'); li.style.setProperty('--tone', 'var(--c' + p.c + ')');
+      li.appendChild(icoEl(iconKey(p), p.c, 'sm'));
+      const n = document.createElement('span'); n.className = 'cb-name'; n.textContent = p.name || 'Tanpa nama';
+      const a = document.createElement('span'); a.className = 'cb-amt'; a.textContent = rp(v);
+      const bar = document.createElement('div'); bar.className = 'bar'; const i = document.createElement('i'); i.style.width = (v / max * 100) + '%'; bar.appendChild(i);
+      const pc = document.createElement('span'); pc.className = 'cb-pct'; pc.textContent = pctFmt(Math.round(v / (total || 1) * 1000) / 10) + '% dari pengeluaran yang dicatat';
+      li.append(n, a, bar, pc); list.appendChild(li);
+    });
+    if (adj) { const e = document.createElement('p'); e.className = 'fhint'; e.textContent = 'Koreksi saldo bulan ini: ' + (adj < 0 ? '+' + rp(-adj) : rp(adj)) + ' (tidak termasuk dalam rincian di atas).'; list.appendChild(e); }
+  }
+  function renderSearch(){
+    const q = $('#search').value.trim().toLowerCase();
+    const list = $('#searchList'); list.textContent = '';
+    if (!q) { $('#searchInfo').textContent = 'Pencarian mencakup semua bulan.'; list.hidden = true; return; }
+    const keys = Object.keys(Object.assign({}, localAll.months, { [curKey]: 1 })).filter(k => /^\d{4}-\d{2}$/.test(k)).sort().reverse();
+    const found = [];
+    keys.forEach(k => { const m = monthOf(k); if (!m) return; const pos = posListOf(k); m.tx.forEach(t => { const lab = labelIn(t, pos); if ((t.desc + ' ' + lab).toLowerCase().includes(q)) found.push({ t, k, lab }); }); });
+    found.sort((a, b) => b.t.date.localeCompare(a.t.date));
+    const total = found.reduce((s, f) => s + f.t.amt, 0);
+    $('#searchInfo').textContent = found.length ? found.length + ' catatan ditemukan, total ' + rp(total) + (found.length > 50 ? '. Menampilkan 50 terbaru.' : '.') : 'Tidak ada catatan yang cocok.';
+    list.hidden = !found.length;
+    const fmtD = new Intl.DateTimeFormat('id-ID', { day:'numeric', month:'short', year:'numeric' });
+    found.slice(0, 50).forEach(({ t, lab }) => {
+      const li = document.createElement('li'); li.className = 'tx'; li.style.cursor = 'default';
+      li.appendChild(icoEl(t.posId === ADJ ? 'wallet' : 'dots', 0, 'sm'));
+      const mid = document.createElement('div');
+      const d1 = document.createElement('div'); d1.className = 'tx-desc'; d1.textContent = t.desc || lab;
+      const d2 = document.createElement('div'); d2.className = 'tx-pos'; d2.textContent = lab;
+      const [y, m, d] = t.date.split('-').map(Number);
+      const d3 = document.createElement('div'); d3.className = 'tx-when'; d3.textContent = (y && m && d) ? fmtD.format(new Date(y, m - 1, d)) : '';
+      mid.append(d1, d2, d3);
+      const a = document.createElement('span'); a.className = 'tx-amt' + (t.amt < 0 ? ' plus' : ''); a.textContent = t.amt < 0 ? '+' + rp(-t.amt) : rp(t.amt);
+      li.append(mid, a); list.appendChild(li);
+    });
+  }
+  let searchT = 0;
+  $('#search').addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(renderSearch, 150); });
+  function renderReport(){ renderTrend(); renderCatBars(); renderSearch(); }
+  $('#csvBtn').addEventListener('click', () => {
+    if (dirty.settings) flush('settings'); if (dirty.month) flush('month');
+    writeLocal();
+    const esc = (v) => { const s2 = String(v ?? ''); return /[";\n]/.test(s2) ? '"' + s2.replace(/"/g, '""') + '"' : s2; };
+    const lines = [['Tanggal', 'Bulan', 'Amplop', 'Rincian', 'Keterangan', 'Nominal'].join(';')];
+    Object.keys(localAll.months).filter(k => /^\d{4}-\d{2}$/.test(k)).sort().forEach(k => {
+      const m = monthOf(k); if (!m) return; const pos = posListOf(k);
+      m.tx.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(t => {
+        const lab = labelIn(t, pos).split(' › ');
+        lines.push([t.date, k, lab[0], lab[1] || '', t.desc, t.amt].map(esc).join(';'));
+      });
+    });
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'amplop-gajian-catatan.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    $('#csvMsg').textContent = (lines.length - 1) + ' catatan diekspor.';
   });
 
   /* ---------- Mode sederhana ---------- */

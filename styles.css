@@ -105,10 +105,12 @@ h2{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
 .ring-txt small{font-size:.68rem;opacity:.85}
 
 /* Tab */
-.tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);padding:5px;border-radius:999px;box-shadow:var(--shadow)}
+.tabs{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);padding:5px;border-radius:999px;box-shadow:var(--shadow)}
 .tabs::before,.freq::before{content:"";position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:999px;background:var(--btn);
   transition:transform .42s cubic-bezier(.3,1.3,.5,1)}
+.tabs::before{width:calc((100% - 18px) / 3)}
 .tabs[data-tab="catat"]::before{transform:translateX(calc(100% + 4px))}
+.tabs[data-tab="lapor"]::before{transform:translateX(calc(200% + 8px))}
 .tabs button{position:relative;z-index:1;border:0;border-radius:999px;padding:10px 8px;background:transparent;font-weight:700;color:var(--muted);font-size:.9rem;transition:color .25s}
 .tabs button[aria-selected="true"]{color:var(--btn-ink)}
 
@@ -397,6 +399,27 @@ body.simple .seg,body.simple .pfrom,body.simple .pagu,body.simple #groupBox,body
 .tx.sel{background:var(--accent-soft)}
 .tx-tip{margin:-8px 0 0}
 
+/* Laporan */
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto;min-width:300px}
+.chart text{fill:var(--muted);font-family:var(--f-body);font-size:10px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat{padding:10px 12px;border-radius:var(--r-sm);background:var(--surface-2);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:.74rem;color:var(--muted);font-weight:600}
+.stat b{font-family:var(--f-display);font-size:1.05rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cat-bars{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.cat-bars li{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.cat-bars .cb-name{font-weight:700;font-size:.88rem;min-width:0;overflow-wrap:anywhere}
+.cat-bars .cb-amt{font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;text-align:right}
+.cat-bars .bar{grid-column:2 / -1;height:8px}
+.cat-bars .bar i{background:var(--tone)}
+.cat-bars .cb-pct{grid-column:2 / -1;font-size:.74rem;color:var(--muted);margin-top:-2px}
+.tx .tx-when{font-size:.74rem;color:var(--muted)}
+
 /* Cadangan */
 .bk-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:14px 16px;border-radius:var(--r);background:var(--warn-soft);box-shadow:var(--shadow);animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 .bk-banner-txt{flex:1 1 220px;min-width:0}
@@ -434,3 +457,5 @@ body.simple .seg,body.simple .pfrom,body.simple .pagu,body.simple #groupBox,body
 .cat,.sub,.tpl button,.qa button,.dchip,.ghost,.seg button{transition:transform .15s, background .2s, border-color .2s, color .2s}
 .qa button:active,.dchip:active,.sub:active,.cat:active{transform:scale(.95)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

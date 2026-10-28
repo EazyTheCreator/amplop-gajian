@@ -57,7 +57,8 @@
 
   <nav class="tabs" role="tablist" aria-label="Menu" data-tab="bagi">
     <button type="button" role="tab" id="tabBagi" aria-controls="panelBagi" aria-selected="true">Bagi gaji</button>
-    <button type="button" role="tab" id="tabCatat" aria-controls="panelCatat" aria-selected="false">Catat pengeluaran</button>
+    <button type="button" role="tab" id="tabCatat" aria-controls="panelCatat" aria-selected="false">Catat</button>
+    <button type="button" role="tab" id="tabLapor" aria-controls="panelLapor" aria-selected="false">Laporan</button>
   </nav>
 
   <section class="panel" id="panelBagi" role="tabpanel" aria-labelledby="tabBagi">
@@ -243,6 +244,37 @@
     <div class="sec-head"><h2>Riwayat</h2><small id="txCount"></small></div>
     <p class="fhint tx-tip">Ketuk catatan untuk mengubahnya.</p>
     <ul class="tx-list" id="txList"></ul>
+  </section>
+
+  <section class="panel" id="panelLapor" role="tabpanel" aria-labelledby="tabLapor" hidden>
+    <section class="card">
+      <div class="sec-head" style="margin:0"><h2>6 bulan terakhir</h2><small>Pemasukan dan pengeluaran</small></div>
+      <div class="chart" id="trendChart" role="img"></div>
+      <div class="legend"><span><i style="background:var(--c1)"></i>Pemasukan</span><span><i style="background:var(--c3)"></i>Pengeluaran (termasuk utang)</span></div>
+      <div class="stat-row" id="trendStats"></div>
+    </section>
+
+    <section class="card">
+      <div class="sec-head" style="margin:0"><h2>Pengeluaran per amplop</h2><small id="catMonth"></small></div>
+      <ul class="cat-bars" id="catBars"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Cari catatan</h2>
+      <div class="field">
+        <label for="search" class="sr">Cari catatan</label>
+        <input class="plain" id="search" type="search" autocomplete="off" placeholder="Cari keterangan atau amplop, misalnya: listrik">
+      </div>
+      <p class="fhint" id="searchInfo">Pencarian mencakup semua bulan.</p>
+      <ul class="tx-list" id="searchList"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Ekspor</h2>
+      <p class="bk-text">Unduh semua catatan pengeluaran dari semua bulan sebagai file CSV yang dapat dibuka di Excel atau Google Sheets.</p>
+      <div class="row-actions"><button type="button" class="ghost accent" id="csvBtn">Unduh CSV</button></div>
+      <p class="form-msg" id="csvMsg" role="status"></p>
+    </section>
   </section>
 
   <section class="card backup" aria-labelledby="bkTitle">

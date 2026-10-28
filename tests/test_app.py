@@ -305,12 +305,43 @@ async def test_template_switch(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_report(b):
+    print("Laporan")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    await page.click("#tabCatat")
+    await page.click('.cat[data-pos="k1"]')
+    await page.click('.sub[data-item="k1b"]')
+    await type_money(page, "#txAmt", "200000")
+    await page.fill("#txDesc", "Token PLN")
+    await page.click("#txSubmit")
+    await page.click('.cat[data-pos="k2"]')
+    await type_money(page, "#txAmt", "50000")
+    await page.click("#txSubmit")
+    await page.wait_for_timeout(600)
+    await page.click("#tabLapor")
+    await page.wait_for_timeout(300)
+    check("grafik 6 bulan tergambar", await page.locator("#trendChart svg rect").count() == 12)
+    check("pengeluaran per amplop urut terbesar", (await page.locator("#catBars .cb-name").first.text_content()) == "Tempat tinggal")
+    await page.fill("#search", "pln")
+    await page.wait_for_timeout(300)
+    check("pencarian menemukan catatan", "1 catatan ditemukan" in await text(page, "#searchInfo"))
+    async with page.expect_download() as dl:
+        await page.click("#csvBtn")
+    d = await dl.value
+    path = await d.path()
+    content = open(path, encoding="utf-8-sig").read()
+    check("CSV berisi 2 catatan + judul", len(content.strip().splitlines()) == 3, content[:200])
+    check("CSV memuat nama amplop", "Tempat tinggal;Token listrik" in content, content[:200])
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
         page, errors = await fresh(b, color_scheme=scheme)
         await type_money(page, "#inGaji", "8000000")
-        for tab in ("#tabBagi", "#tabCatat"):
+        for tab in ("#tabBagi", "#tabCatat", "#tabLapor"):
             await page.click(tab)
             await page.wait_for_timeout(200)
             width = await page.evaluate("document.documentElement.scrollWidth")
@@ -321,7 +352,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_edit_tx, test_template_switch, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_edit_tx, test_template_switch, test_report, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]
