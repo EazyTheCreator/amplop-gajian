@@ -389,6 +389,14 @@ body.simple .seg,body.simple .pfrom,body.simple .pagu,body.simple #groupBox,body
 .doc a{color:var(--accent);font-weight:700}
 .back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--accent);text-decoration:none;font-size:.9rem}
 
+.tx-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tx-actions .primary{flex:1 1 200px}
+#txForm.editing{box-shadow:0 0 0 2px var(--accent), var(--shadow)}
+.tx{cursor:pointer;transition:background .2s}
+.tx:hover{background:var(--surface-2)}
+.tx.sel{background:var(--accent-soft)}
+.tx-tip{margin:-8px 0 0}
+
 /* Cadangan */
 .bk-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:14px 16px;border-radius:var(--r);background:var(--warn-soft);box-shadow:var(--shadow);animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 .bk-banner-txt{flex:1 1 220px;min-width:0}

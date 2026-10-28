@@ -1273,17 +1273,59 @@
     if (!posId) { msg.className = 'form-msg bad'; msg.textContent = 'Buat amplop terlebih dahulu di tab Bagi gaji.'; return; }
     if (!amt) { msg.className = 'form-msg bad'; msg.textContent = 'Isi nominal pengeluaran terlebih dahulu.'; amtEl.focus(); return; }
     const date = $('#txDate').value || defaultTxDate();
-    const t = { id: newId(), date, posId, itemId, desc: $('#txDesc').value.trim(), amt };
-    month.tx.push(t);
+    const desc = $('#txDesc').value.trim();
+    let t;
+    if (editingTx) {
+      t = month.tx.find(x => x.id === editingTx);
+      if (t) Object.assign(t, { date, posId, itemId, desc, amt });
+    }
+    if (!t) { t = { id: newId(), date, posId, itemId, desc, amt }; month.tx.push(t); }
+    const wasEdit = !!editingTx;
     saveMonth();
-    amtEl.value = ''; $('#txDesc').value = '';
-    msg.className = 'form-msg'; msg.textContent = 'Tercatat ' + rp(amt) + ' untuk ' + txLabel(t) + '.';
+    stopEdit();
+    msg.className = 'form-msg';
+    msg.textContent = (wasEdit ? 'Perubahan disimpan: ' : 'Tercatat ') + rp(amt) + ' untuk ' + txLabel(t) + '.';
     renderCatat();
   });
+
+  // Ubah transaksi: ketuk baris riwayat untuk memuatnya ke formulir.
+  let editingTx = null;
+  function startEdit(id){
+    const t = month.tx.find(x => x.id === id); if (!t || t.posId === ADJ) return;
+    editingTx = id;
+    $('#txPos').value = t.posId + '|' + (t.itemId || '');
+    $('#txAmt').value = fmt(t.amt);
+    $('#txDesc').value = t.desc;
+    $('#txDate').value = t.date;
+    $('#txSubmit').textContent = 'Simpan perubahan';
+    $('#txCancel').hidden = false;
+    $('#txForm').classList.add('editing');
+    $('#txMsg').className = 'form-msg'; $('#txMsg').textContent = 'Mengubah catatan ' + (t.desc || txLabel(t)) + '.';
+    renderCats(); renderDate(); flow($('#subGrid'));
+    $('#txForm').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+    $('#txAmt').focus({ preventScroll: true });
+    document.querySelectorAll('#txList .tx').forEach(li => li.classList.toggle('sel', li.dataset.id === id));
+  }
+  function stopEdit(){
+    editingTx = null;
+    $('#txAmt').value = ''; $('#txDesc').value = '';
+    $('#txSubmit').textContent = 'Catat pengeluaran';
+    $('#txCancel').hidden = true;
+    $('#txForm').classList.remove('editing');
+    document.querySelectorAll('#txList .tx.sel').forEach(li => li.classList.remove('sel'));
+  }
+  $('#txCancel').addEventListener('click', () => { stopEdit(); $('#txMsg').textContent = ''; });
   $('#txList').addEventListener('click', e => {
-    const del = e.target.closest('.pdel'); if (!del) return;
-    const li = del.closest('.tx');
-    armDelete(del, () => { month.tx = month.tx.filter(t => t.id !== li.dataset.id); saveMonth(); renderCatat(); });
+    const del = e.target.closest('.pdel');
+    if (del) {
+      const li = del.closest('.tx');
+      armDelete(del, () => {
+        if (editingTx === li.dataset.id) stopEdit();
+        month.tx = month.tx.filter(t => t.id !== li.dataset.id); saveMonth(); renderCatat();
+      });
+      return;
+    }
+    const row = e.target.closest('.tx'); if (row) startEdit(row.dataset.id);
   });
 
   function setTab(t){
@@ -1305,6 +1347,7 @@
     let m = curM + delta, y = curY;
     if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
     curY = y; curM = m; curKey = keyOf(y, m);
+    if (editingTx) stopEdit();
     $('#txDate').value = '';
     month = normMonth(localAll.months[curKey]);
     activatePlan();

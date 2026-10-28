@@ -80,7 +80,7 @@ async def test_debt_and_carry(b):
     await page.click(".cat >> nth=1")
     await page.click('#quickAmt button[data-a="50000"]')
     await page.click('#quickAmt button[data-a="20000"]')
-    await page.click("#txForm button[type=submit]")
+    await page.click("#txSubmit")
     await page.wait_for_timeout(700)
     check("sisa uang = gaji − utang − belanja", "6.930.000" in await text(page, "#sLeft"))
     await page.click("#tabBagi")
@@ -252,6 +252,28 @@ async def test_simple_mode(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_edit_tx(b):
+    print("Ubah transaksi")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    await page.click("#tabCatat")
+    await page.click(".cat >> nth=1")
+    await type_money(page, "#txAmt", "50000")
+    await page.fill("#txDesc", "Pasar")
+    await page.click("#txSubmit")
+    await page.wait_for_timeout(600)
+    await page.click("#txList .tx .tx-desc")
+    check("formulir terisi data lama", (await page.input_value("#txAmt")) == "50.000")
+    check("mode ubah aktif", "Simpan" in await text(page, "#txSubmit"))
+    await type_money(page, "#txAmt", "75000")
+    await page.click("#txSubmit")
+    await page.wait_for_timeout(600)
+    check("jumlah catatan tetap satu", await page.locator("#txList .tx").count() == 1)
+    check("nominal diperbarui", "75.000" in await text(page, "#txList"))
+    check("sisa uang ikut berubah", "7.925.000" in await text(page, "#sLeft"))
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -268,7 +290,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_edit_tx, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

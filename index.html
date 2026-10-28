@@ -215,7 +215,10 @@
           <input class="plain" id="txDate" type="date" aria-label="Pilih tanggal lain">
         </div>
       </div>
-      <button type="submit" class="primary big">Catat pengeluaran</button>
+      <div class="tx-actions">
+        <button type="submit" class="primary big" id="txSubmit">Catat pengeluaran</button>
+        <button type="button" class="ghost" id="txCancel" hidden>Batal ubah</button>
+      </div>
       <p class="form-msg" id="txMsg" role="status"></p>
     </form>
 
@@ -238,6 +241,7 @@
     <ul class="env-list" id="envList"></ul>
 
     <div class="sec-head"><h2>Riwayat</h2><small id="txCount"></small></div>
+    <p class="fhint tx-tip">Ketuk catatan untuk mengubahnya.</p>
     <ul class="tx-list" id="txList"></ul>
   </section>
 
