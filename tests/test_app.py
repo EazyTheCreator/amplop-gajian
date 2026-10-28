@@ -274,6 +274,37 @@ async def test_edit_tx(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_template_switch(b):
+    print("Ganti template")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    await page.click("#addPos")
+    await page.wait_for_timeout(150)
+    await page.fill(".pos:last-child .pname", "Kucing")
+    await page.dispatch_event(".pos:last-child .pname", "input")
+    await page.click("#tabCatat")
+    await page.click('.cat[data-pos="k1"]')
+    await page.click('.sub[data-item="k1b"]')
+    await type_money(page, "#txAmt", "100000")
+    await page.click("#txSubmit")
+    await page.click('.cat[data-pos="k6"]')
+    await type_money(page, "#txAmt", "30000")
+    await page.click("#txSubmit")
+    await page.wait_for_timeout(600)
+    await page.click("#tabBagi")
+    await page.click('.tpl button[data-tpl="umum"]')
+    await page.click("#tplYes")
+    await page.wait_for_timeout(600)
+    names = await page.evaluate("[...document.querySelectorAll('.pos[data-id] .pname')].map(e => e.value)")
+    check("amplop buatan sendiri tetap ada", "Kucing" in names, names)
+    check("amplop Kuliah dipertahankan karena ada riwayat", "Kuliah" in names, names)
+    await page.click("#tabCatat")
+    hist = await text(page, "#txList")
+    check("listrik dipindah ke amplop Umum", "Tempat tinggal › Listrik" in hist, hist)
+    check("tidak ada 'Amplop terhapus'", "Amplop terhapus" not in hist, hist)
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -290,7 +321,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_edit_tx, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_edit_tx, test_template_switch, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

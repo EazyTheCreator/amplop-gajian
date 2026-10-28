@@ -1252,17 +1252,54 @@
     tplPending = b.dataset.tpl;
     const same = tplPending === settings.tpl;
     $('#tplConfirmText').textContent = same
-      ? 'Kembalikan semua amplop ke template awal ' + TEMPLATES[tplPending].name + '? Perubahan nama dan nominal amplop akan hilang.'
-      : 'Ganti ke template ' + TEMPLATES[tplPending].name + '? Semua amplop saat ini akan diganti. Catatan pengeluaran tetap tersimpan.';
+      ? 'Kembalikan amplop template ke susunan awal ' + TEMPLATES[tplPending].name + '? Perubahan nama dan nominal amplop template akan hilang. Amplop buatan Anda dan riwayat pengeluaran tetap aman.'
+      : 'Ganti ke template ' + TEMPLATES[tplPending].name + '? Amplop template diganti, sedangkan amplop buatan Anda tetap ada. Riwayat pengeluaran dipindahkan ke amplop yang sepadan.' + (frozen ? ' Perubahan ini hanya berlaku untuk ' + monthLabel() + '.' : '');
     $('#tplYes').textContent = same ? 'Ya, kembalikan' : 'Ya, ganti';
     $('#tplConfirm').hidden = false;
   });
   $('#tplNo').addEventListener('click', () => { tplPending = null; $('#tplConfirm').hidden = true; });
+  // Pemetaan amplop & rincian antartemplate agar riwayat pengeluaran tidak kehilangan amplopnya.
+  const TPL_MAP = {
+    umum: { env: { k1:'u1', k2:'u2', k3:'u3', k4:'u4', k5:'u5', k7:'u8', k8:'u9', k9:'u10', k10:'u11' },
+      item: { k1a:'u1|u1a', k1b:'u1|u1b', k1c:'u1|u1c', k2a:'u2|u2a', k2b:'u2|u2a', k2c:'u2|u2a', k2d:'u2|u2a', k2e:'u2|u2b',
+        k3a:'u3|u3a', k3b:'u3|u3a', k3c:'u3|u3a', k4a:'u4|u4a', k5a:'u5|u5a', k5b:'u5|u5b' } },
+    kost: { env: { u1:'k1', u2:'k2', u3:'k3', u4:'k4', u5:'k5', u8:'k7', u9:'k8', u10:'k9', u11:'k10' },
+      item: { u1a:'k1|k1a', u1b:'k1|k1b', u1c:'k1|k1c', u1d:'k5|k5a', u1e:'k1|', u2a:'k2|k2a', u2b:'k2|k2e', u3a:'k3|k3a', u3b:'k3|k3a',
+        u4a:'k4|k4a', u4b:'k4|k4a', u4c:'k4|k4a', u5a:'k5|k5a', u5b:'k5|k5b' } }
+  };
+  function switchTemplate(to){
+    const fresh = normSettings({ pos: clone(TEMPLATES[to].pos), autoV: 2 }).pos;
+    const freshIds = new Set(fresh.map(p => p.id));
+    const customs = settings.pos.filter(p => !IDEAL[p.id]);
+    const oldById = {}; settings.pos.forEach(p => { oldById[p.id] = p; });
+    const map = to === settings.tpl ? null : TPL_MAP[to];
+    const keep = new Set();
+    // Bulan yang ikut rencana berjalan: bulan ini dan bulan lain yang belum dibekukan
+    const keys = frozen ? [curKey] : [curKey].concat(Object.keys(localAll.months).filter(k => k !== curKey && !localAll.months[k].plan));
+    keys.forEach(k => {
+      const m = k === curKey ? month : localAll.months[k]; if (!m || !m.tx) return;
+      m.tx.forEach(t => {
+        if (t.posId === ADJ || !IDEAL[t.posId] || freshIds.has(t.posId)) return;
+        const it = map && t.itemId && map.item[t.itemId];
+        if (it) { const [pp, ii] = it.split('|'); t.posId = pp; t.itemId = ii; return; }
+        const env = map && map.env[t.posId];
+        if (env) { t.posId = env; t.itemId = ''; return; }
+        keep.add(t.posId);   // tidak ada padanan: amplop lama dipertahankan agar riwayat tetap utuh
+      });
+      if (k !== curKey) localAll.months[k] = m;
+    });
+    const kept = [...keep].map(id => oldById[id]).filter(Boolean);
+    settings.tpl = to;
+    settings.pos = fresh.concat(kept, customs);
+    saveSettings(); saveMonth();
+    return kept;
+  }
   $('#tplYes').addEventListener('click', () => {
     if (!tplPending) return;
-    settings.tpl = tplPending; settings.pos = normSettings({ pos: clone(TEMPLATES[tplPending].pos) }).pos;
+    const kept = switchTemplate(tplPending);
     tplPending = null; $('#tplConfirm').hidden = true;
-    saveSettings(); renderBagi(); flow($('#posList'));
+    renderBagi(); flow($('#posList'));
+    if (kept.length) { const m = $('#autoNote'); m.hidden = false; m.className = 'autonote'; m.textContent = 'Amplop ' + kept.map(p => p.name).join(', ') + ' dipertahankan karena memiliki riwayat pengeluaran bulan ini dan tidak ada padanannya di template baru. Anda dapat menghapusnya bila tidak diperlukan.'; }
   });
 
   $('#txForm').addEventListener('submit', e => {
