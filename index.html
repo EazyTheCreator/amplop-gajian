@@ -140,6 +140,14 @@ h2{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
 .wk-total{margin:0;font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .wk-total b{color:var(--ink);font-family:var(--f-display);font-size:1rem}
 .wk-auto{font-size:.78rem}
+.carry{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;padding:11px 14px;border-radius:var(--r-sm);background:var(--good-soft);color:var(--good);font-size:.86rem;font-weight:700}
+.carry b{font-family:var(--f-display);font-size:1rem;font-variant-numeric:tabular-nums}
+.carry small{flex-basis:100%;font-weight:500;font-size:.76rem;opacity:.9}
+.debt-hint{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.pos.debt{background:var(--surface);background:color-mix(in srgb, var(--danger) 7%, var(--surface))}
+.pos.debt .pstatic{grid-area:name;font-weight:800;font-size:1rem}
+.pos.debt .debt-edit{grid-area:del;font-size:.8rem;justify-self:end}
+.pos.debt .pfrom{grid-area:val}
 .panel{display:flex;flex-direction:column;gap:14px}
 
 /* Kartu & isian */
@@ -447,6 +455,15 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         <div class="money"><span>Rp</span><input id="inLain" inputmode="numeric" autocomplete="off" placeholder="0"></div>
       </div>
       <button type="button" id="useLast" class="link" hidden></button>
+      <div class="carry" id="carryRow" hidden>
+        <span>Sisa bulan lalu</span><b id="carryAmt">+Rp0</b>
+        <small id="carryNote">Otomatis ditambahkan ke total uang bulan ini.</small>
+      </div>
+      <div class="field">
+        <label for="inUtang">Utang &amp; cicilan bulan ini <span class="opt">(isi jika ada)</span></label>
+        <div class="money"><span>Rp</span><input id="inUtang" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+        <small class="fhint debt-hint" id="utangHint">Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase ideal dihitung dari sisa pemasukan setelah utang.</small>
+      </div>
       <div class="field">
         <span class="flabel"><span class="step">3</span>Bagi otomatis</span>
         <button type="button" class="primary" id="autoIdeal">Bagi sesuai persentase ideal</button>
@@ -471,7 +488,9 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         </ul>
         <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase ideal dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
         <p><strong>Gaji mingguan.</strong> Pilih skema Mingguan jika penghasilan Anda diterima per minggu, misalnya pekerja harian, pengemudi daring, atau pekerja lepas. Total sebulan dihitung dari gaji per minggu dikalikan jumlah hari gajian di bulan tersebut (4 atau 5 kali). Karena penghasilan mingguan cenderung naik turun, acuan dana darurat dinaikkan menjadi 7–12% dan hiburan dibatasi maksimal 12%. Biaya bulanan seperti sewa sebaiknya dicicil sedikit setiap minggu, dan di bulan dengan lima kali gajian, gajian kelima sebaiknya langsung masuk tabungan atau dana darurat.</p>
-        <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. Jika memiliki cicilan, total cicilan sebaiknya tidak melebihi 30% pemasukan.</p>
+        <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. </p>
+        <p><strong>Utang dan cicilan.</strong> Isi pada kolom tersendiri di atas. Utang dibayar lebih dulu dari pemasukan, lalu seluruh persentase ideal dihitung dari sisa pemasukan setelah utang. Total cicilan sebaiknya tidak melebihi 30% pemasukan; di atas 40% sudah tergolong berat.</p>
+        <p><strong>Sisa bulan lalu.</strong> Uang yang tersisa di akhir bulan (pemasukan dikurangi utang dan pengeluaran yang dicatat) otomatis ditambahkan ke total uang bulan berikutnya.</p>
         <p class="fine">Angka di atas adalah pedoman umum perencanaan keuangan pribadi, bukan nasihat keuangan profesional. Sesuaikan dengan kondisi dan biaya hidup di kota Anda.</p>
       </div>
     </details>
@@ -652,7 +671,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     {id:'k4', name:'Transportasi', type:'rinci', value:0, c:2, items:[
       it('k4a','Ongkos harian (KRL, ojek daring, bensin)',400000)]},
     {id:'k5', name:'Tagihan & langganan', type:'rinci', value:0, c:6, items:[
-      it('k5a','Pulsa & kuota internet',100000), it('k5b','Langganan aplikasi',50000), it('k5c','Cicilan (jika ada)',0)]},
+      it('k5a','Pulsa & kuota internet',100000), it('k5b','Langganan aplikasi',50000)]},
     {id:'k6', name:'Kuliah', type:'rinci', value:0, c:4, items:[
       it('k6a','Fotokopi, cetak & buku',150000), it('k6b','Kegiatan & iuran',50000)]},
     {id:'k7', name:'Tabungan', type:'pct', value:10, c:8, items:[]},
@@ -697,7 +716,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     k5a:60, k5b:40,
     k6a:70, k6b:30
   };
-  const ITEM_NOTE = { k5c:'Isi sesuai cicilan yang berjalan; total cicilan sebaiknya maks. 30% pemasukan' };
+  const ITEM_NOTE = {};
 
   const UMUM_POS = [
     {id:'u1', name:'Tempat tinggal', type:'rinci', value:0, c:1, items:[
@@ -710,7 +729,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     {id:'u4', name:'Transportasi', type:'rinci', value:0, c:2, items:[
       it('u4a','Bensin & ongkos harian',385000), it('u4b','Parkir & tol',95000), it('u4c','Servis & pajak kendaraan',160000)]},
     {id:'u5', name:'Tagihan & langganan', type:'rinci', value:0, c:6, items:[
-      it('u5a','Pulsa & kuota',145000), it('u5b','Langganan aplikasi',95000), it('u5c','Cicilan (jika ada)',0)]},
+      it('u5a','Pulsa & kuota',145000), it('u5b','Langganan aplikasi',95000)]},
     {id:'u6', name:'Kesehatan', type:'rinci', value:0, c:4, items:[
       it('u6a','Iuran BPJS atau asuransi',145000), it('u6b','Obat & pemeriksaan',95000)]},
     {id:'u7', name:'Keluarga & orang tua', type:'rinci', value:0, c:9, items:[
@@ -736,7 +755,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     u6a:60, u6b:40,
     u7a:100
   });
-  ITEM_NOTE.u5c = ITEM_NOTE.k5c;
   const TEMPLATES = { kost:{ name:'Anak kost', pos:KOST_POS }, umum:{ name:'Umum', pos:UMUM_POS } };
 
   const isOldDefault = (pos) => Array.isArray(pos) && pos.length === OLD_DEFAULT.length &&
@@ -746,6 +764,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     d = d || {};
     let pos = Array.isArray(d.pos) ? d.pos : clone(KOST_POS);
     if (isOldDefault(pos)) pos = clone(KOST_POS);
+    // Rincian "Cicilan (jika ada)" versi lama dipindahkan ke kolom utang.
+    let movedDebt = 0;
+    pos = pos.map(p => (p && Array.isArray(p.items)) ? Object.assign({}, p, { items: p.items.filter(x => {
+      if (x && (x.id === 'k5c' || x.id === 'u5c')) { movedDebt += Number(x.value) || 0; return false; }
+      return true;
+    }) }) : p);
     const tpl = d.tpl === 'umum' || d.tpl === 'kost' ? d.tpl : (pos.some(p => /^u\d+$/.test(String(p && p.id))) ? 'umum' : 'kost');
     return {
       tpl,
@@ -760,6 +784,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         pagu: Number(p.pagu) || 0
       })),
       lastIncome: Number(d.lastIncome) || 0,
+      lastUtang: d.lastUtang !== undefined && d.lastUtang !== null ? (Number(d.lastUtang) || 0) : movedDebt,
       lastWeekly: Number(d.lastWeekly) || 0
     };
   }
@@ -768,6 +793,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     return {
       gaji: Number(d.gaji) || 0,
       lain: Number(d.lain) || 0,
+      utang: d.utang === undefined || d.utang === null || d.utang === '' ? null : Math.max(0, Number(d.utang) || 0),
       gajiMinggu: Number(d.gajiMinggu) || 0,
       minggu: Math.max(0, Math.min(6, Number(d.minggu) || 0)),
       tx: (Array.isArray(d.tx) ? d.tx : []).map(t => ({ id:String(t.id), date:String(t.date || ''), posId:String(t.posId || ''), itemId:String(t.itemId || ''), desc:String(t.desc || ''), amt: Number(t.amt) || 0 }))
@@ -790,6 +816,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     try { const raw = localStorage.getItem(LS_KEY); if (raw) { const o = JSON.parse(raw); localAll = { settings: o.settings || null, months: o.months || {} }; } } catch (e) {}
   }
   function writeLocal(){
+    if (month.utang === null) month.utang = utangNow();
     localAll.settings = clone(settings);
     localAll.months[curKey] = clone(month);
     try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); } catch (e) {}
@@ -855,10 +882,33 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   }
 
   /* ---------- Perhitungan ---------- */
-  const income = () => month.gaji + month.lain;
+  let curCarry = 0;
+  const income = () => month.gaji + month.lain + curCarry;
+  const utangNow = () => month.utang !== null ? month.utang : (settings.lastUtang || 0);
+  const netOf = (inc) => Math.max(0, inc - utangNow());
+  // Sisa uang yang terbawa ke bulan `k` dari bulan-bulan sebelumnya (hanya yang positif).
+  const prevKeyOf = (k) => { let [y, m] = k.split('-').map(Number); m--; if (m < 1) { m = 12; y--; } return keyOf(y, m); };
+  function carryInto(k){
+    if (mode === 'db') return 0;
+    const keys = Object.keys(localAll.months || {}).filter(x => /^\d{4}-\d{2}$/.test(x)).sort();
+    if (!keys.length) return 0;
+    const first = keys[0];
+    const chain = []; let pk = prevKeyOf(k);
+    while (pk >= first && chain.length < 240) { chain.unshift(pk); pk = prevKeyOf(pk); }
+    let carry = 0;
+    chain.forEach(key => {
+      const raw = key === curKey ? month : localAll.months[key];
+      if (!raw) return;
+      const d = normMonth(raw);
+      const spentM = d.tx.reduce((s, t) => s + t.amt, 0);
+      if (!d.gaji && !d.lain && !spentM && !d.utang) return;
+      carry = Math.max(0, d.gaji + d.lain + carry - (d.utang || 0) - spentM);
+    });
+    return carry;
+  }
   const baseIncome = () => income() || PREVIEW_INCOME;
   const itemsSum = (p) => p.items.reduce((s, x) => s + x.value, 0);
-  const allocOf = (p, inc) => p.type === 'fix' ? p.value : p.type === 'rinci' ? itemsSum(p) : Math.round(inc * p.value / 100);
+  const allocOf = (p, inc) => p.type === 'fix' ? p.value : p.type === 'rinci' ? itemsSum(p) : Math.round(netOf(inc) * p.value / 100);
   function paydaysIn(y, m, wd){
     const last = new Date(y, m, 0).getDate(); let n = 0;
     for (let d = 1; d <= last; d++) if (new Date(y, m - 1, d).getDay() === wd) n++;
@@ -870,8 +920,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   // Bulan yang dulu diisi dengan skema bulanan: turunkan gaji per minggu sebelum jumlah gajian diubah.
   function ensureWeekly(){ if (isWeekly() && !month.gajiMinggu && month.gaji) month.gajiMinggu = Math.round(month.gaji / weeksNow() / 1000) * 1000; }
   const weeklyAmt = () => month.gajiMinggu || (month.gaji ? Math.round(month.gaji / weeksNow()) : 0);
-  const totalAlloc = (inc) => settings.pos.reduce((s, p) => s + allocOf(p, inc), 0);
-  const idealBudget = (p, inc) => idealOf(p.id) ? round5k(inc * idealOf(p.id).t / 100) : 0;
+  const totalAlloc = (inc) => utangNow() + settings.pos.reduce((s, p) => s + allocOf(p, inc), 0);
+  const idealBudget = (p, inc) => idealOf(p.id) ? round5k(netOf(inc) * idealOf(p.id).t / 100) : 0;
   const paguOf = (p, inc) => (Number(p.pagu) > 0 ? Number(p.pagu) : idealBudget(p, inc));
   // Saran per rincian: pagu dikurangi rincian tanpa acuan (mis. cicilan), lalu dibagi menurut porsi ideal.
   function itemSuggestions(p, inc){
@@ -925,7 +975,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     leftRaf = requestAnimationFrame(step);
   }
   function renderSummary(){
-    const inc = income(), out = totalSpent();
+    const inc = income(), out = totalSpent() + utangNow();
     $('#sIn').textContent = rp(inc);
     $('#sOut').textContent = rp(out);
     const left = $('#sLeft'); animateLeft(inc - out); left.classList.toggle('neg', inc - out < 0);
@@ -941,6 +991,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     const wk = isWeekly(), gv = wk ? weeklyAmt() : month.gaji;
     if (document.activeElement !== g) g.value = gv ? fmt(gv) : '';
     $('#gajiLblText').textContent = wk ? 'Gaji per minggu' : 'Gaji bulan ini';
+    const uin = $('#inUtang'); if (document.activeElement !== uin) { const u = utangNow(); uin.value = u ? fmt(u) : ''; }
     const fq = $('#freq'); fq.dataset.f = settings.freq;
     fq.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === settings.freq)));
     $('#weeklyBox').hidden = !wk;
@@ -1011,7 +1062,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       const out = row.querySelector('.pamt');
       out.textContent = rp(amt);
       out.classList.toggle('preview', preview);
-      const share = base ? amt / base * 100 : 0;
+      const nb = netOf(base), share = nb ? amt / nb * 100 : 0;
       const r = idealOf(p.id);
       groupPct[r ? r.g : 'other'] += share;
       const box = row.querySelector('.pideal'); box.textContent = '';
@@ -1087,9 +1138,43 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         row.append(n, pc, tg); gb.appendChild(row);
       });
     }
+    // Baris utang & cicilan di urutan teratas daftar amplop
+    const ut = utangNow(), list = $('#posList');
+    let drow = list.querySelector('.pos.debt');
+    if (ut > 0) {
+      if (!drow) {
+        drow = document.createElement('li'); drow.className = 'pos debt';
+        drow.innerHTML = '<span class="pstatic">Utang &amp; cicilan</span><button type="button" class="link debt-edit">Ubah</button>' +
+          '<span class="pfrom">Dibayar lebih dulu</span><output class="pamt num"></output><div class="pideal"></div>';
+        const ic = icoEl('card', 0); ic.style.setProperty('--tone', 'var(--danger)'); drow.prepend(ic);
+        list.prepend(drow);
+      }
+      drow.querySelector('.pamt').textContent = rp(ut);
+      const box = drow.querySelector('.pideal'); box.textContent = '';
+      const sp = document.createElement('span');
+      if (preview) { sp.textContent = 'Batas sehat maks. 30% pemasukan'; box.appendChild(sp); }
+      else {
+        const r = ut / ((month.gaji + month.lain) || base) * 100;
+        sp.textContent = pctFmt(Math.round(r * 10) / 10) + '% dari pemasukan · batas sehat maks. 30%';
+        const tg = document.createElement('span');
+        tg.className = 'tag ' + (r > 40 ? 'bad' : r > 30 ? 'warn' : 'ok');
+        tg.textContent = r > 40 ? 'Terlalu berat' : r > 30 ? 'Cukup berat' : 'Sehat';
+        box.append(sp, tg);
+      }
+    } else if (drow) drow.remove();
+    const uh = $('#utangHint');
+    if (ut > 0 && !preview) {
+      const r = ut / ((month.gaji + month.lain) || base) * 100;
+      uh.textContent = 'Utang dibayar lebih dulu. Persentase ideal dihitung dari sisa ' + rp(netOf(base)) + ' setelah utang. Rasio cicilan ' + pctFmt(Math.round(r * 10) / 10) + '% dari gaji dan pemasukan rutin' + (r > 30 ? ', melebihi batas sehat 30%.' : '.');
+    } else uh.textContent = 'Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase ideal dihitung dari sisa pemasukan setelah utang.';
+    const cr = $('#carryRow');
+    cr.hidden = !(curCarry > 0);
+    if (curCarry > 0) $('#carryAmt').textContent = '+' + rp(curCarry);
+
     const tot = totalAlloc(base), rest = base - tot;
     const bar = $('#stackBar'); bar.textContent = '';
     const scale = Math.max(base, tot) || 1;
+    if (ut > 0) { const i = document.createElement('i'); i.style.width = (ut / scale * 100) + '%'; i.style.background = 'var(--danger)'; bar.appendChild(i); }
     settings.pos.forEach(p => {
       const a = allocOf(p, base); if (a <= 0) return;
       const i = document.createElement('i'); i.style.width = (a / scale * 100) + '%'; i.style.background = 'var(--c' + p.c + ')'; bar.appendChild(i);
@@ -1306,6 +1391,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
   $('#txDate').addEventListener('change', renderDate);
 
   function renderAll(){
+    curCarry = carryInto(curKey);
     $('#mLabel').textContent = monthLabel();
     renderBagi();
     if (!$('#panelCatat').hidden) renderCatat();
@@ -1321,6 +1407,11 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     else { month.gaji = v; if (v) { settings.lastIncome = v; saveSettings(); } }
     saveMonth(); refreshBagiNumbers();
   });
+  bindMoney($('#inUtang'), v => {
+    month.utang = v; settings.lastUtang = v;
+    saveSettings(); saveMonth(); refreshBagiNumbers();
+  });
+  $('#posList').addEventListener('click', e => { if (e.target.closest('.debt-edit')) $('#inUtang').focus(); });
   $('#freq').addEventListener('click', e => {
     const b = e.target.closest('button[data-f]'); if (!b || b.dataset.f === settings.freq) return;
     settings.freq = b.dataset.f;
@@ -1382,7 +1473,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       const inc = income(), cur = allocOf(p, baseIncome());
       const to = seg.dataset.t;
       if (to === 'fix') { p.value = cur; }
-      else if (to === 'pct') { p.value = inc ? Math.round(cur / inc * 10000) / 100 : 0; }
+      else if (to === 'pct') { p.value = netOf(inc) ? Math.round(cur / netOf(inc) * 10000) / 100 : 0; }
       else if (!p.items.length) { p.items.push({ id: newId(), name: p.name || 'Rincian', value: cur }); }
       p.type = to;
       saveSettings(); renderBagi();
@@ -1431,7 +1522,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 
   $('#copySum').addEventListener('click', () => {
     const inc = income();
-    const lines = ['Pembagian gaji ' + monthLabel(), 'Pemasukan: ' + rp(inc), ''];
+    const lines = ['Pembagian gaji ' + monthLabel(), 'Pemasukan: ' + rp(inc) + (curCarry > 0 ? ' (termasuk sisa bulan lalu ' + rp(curCarry) + ')' : ''), ''];
+    if (utangNow() > 0) lines.push('• Utang & cicilan (dibayar lebih dulu): ' + rp(utangNow()));
     settings.pos.forEach(p => {
       const a = allocOf(p, inc);
       lines.push('• ' + (p.name || 'Tanpa nama') + (p.type === 'pct' ? ' (' + pctFmt(p.value) + '%)' : '') + ': ' + rp(a));
@@ -1476,7 +1568,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     btn.classList.remove('confirm'); btn.textContent = label;
     settings.pos.forEach(p => {
       const r = idealOf(p.id); if (!r) return;
-      const target = round5k(inc * r.t / 100);
+      const target = round5k(netOf(inc) * r.t / 100);
       if (p.type === 'pct') p.value = r.t;
       else if (p.type === 'fix') p.value = target;
       else {
