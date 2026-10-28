@@ -157,6 +157,29 @@ async def test_backup_reminder(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_frozen_plan(b):
+    print("Rencana per bulan")
+    page, errors = await fresh(b)
+    await page.click("#prevM")                       # bulan lalu
+    await page.wait_for_timeout(200)
+    await type_money(page, "#inGaji", "8000000")
+    await page.wait_for_timeout(600)
+    await page.reload()                              # saat dibuka ulang, bulan lalu dibekukan
+    await page.wait_for_timeout(300)
+    await type_money(page, "#inGaji", "8000000")     # bulan ini
+    await type_money(page, "#inum-k1a", "2500000")   # ubah rencana berjalan
+    await page.wait_for_timeout(600)
+    check("bulan ini memakai sewa baru", (await page.input_value("#inum-k1a")) == "2.500.000")
+    await page.click("#prevM")
+    await page.wait_for_timeout(300)
+    check("bulan lalu ditandai beku", await page.is_visible("#frozenNote"))
+    check("riwayat bulan lalu tidak berubah", await amount(page, "k1") == 2_000_000)
+    await page.click("#nextM")
+    await page.wait_for_timeout(300)
+    check("bulan ini tidak beku", await page.is_hidden("#frozenNote"))
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -173,7 +196,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

@@ -243,6 +243,7 @@
       lain: Number(d.lain) || 0,
       utang: d.utang === undefined || d.utang === null || d.utang === '' ? null : Math.max(0, Number(d.utang) || 0),
       gajiMinggu: Number(d.gajiMinggu) || 0,
+      plan: d.plan && typeof d.plan === 'object' ? d.plan : null,
       minggu: Math.max(0, Math.min(6, Number(d.minggu) || 0)),
       tx: (Array.isArray(d.tx) ? d.tx : []).map(t => ({ id:String(t.id), date:String(t.date || ''), posId:String(t.posId || ''), itemId:String(t.itemId || ''), desc:String(t.desc || ''), amt: Number(t.amt) || 0 }))
     };
@@ -253,9 +254,35 @@
   let curY = today.getFullYear(), curM = today.getMonth() + 1;
   let curKey = keyOf(curY, curM);
 
-  let settings = normSettings(null);
+  let settings = normSettings(null);   // rencana yang sedang ditampilkan
+  let globalS = settings;              // rencana berjalan (untuk bulan ini dan seterusnya)
+  let frozen = false;                  // true bila bulan yang dibuka memakai rencana yang dibekukan
   let month = normMonth(null);
   let localAll = { settings: null, months: {} };
+  const realKey = keyOf(today.getFullYear(), today.getMonth() + 1);
+
+  /* ---------- Rencana per bulan ---------- */
+  // Bagian pengaturan yang menjadi "rencana" sebuah bulan; dibekukan saat bulan itu sudah lewat.
+  const PLAN_KEYS = ['tpl', 'freq', 'payday', 'auto', 'pos'];
+  const pickPlan = (src) => { const o = {}; PLAN_KEYS.forEach(k => { o[k] = clone(src[k]); }); return o; };
+  const monthHasData = (m) => !!(m && (m.gaji || m.lain || m.gajiMinggu || (m.tx && m.tx.length)));
+  // Bekukan rencana bulan-bulan yang sudah lewat dan berisi data, memakai rencana berjalan saat ini.
+  function freezePast(){
+    let changed = false;
+    Object.keys(localAll.months || {}).forEach(k => {
+      const m = localAll.months[k];
+      if (k < realKey && monthHasData(m) && !m.plan) { m.plan = pickPlan(globalS); changed = true; }
+    });
+    if (changed) { try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, localAll, { settings: clone(globalS) }))); } catch (e) {} }
+  }
+  // Pilih rencana yang berlaku untuk bulan yang sedang dibuka.
+  function activatePlan(){
+    if (curKey < realKey && monthHasData(month) && !month.plan) month.plan = pickPlan(globalS);
+    if (month.plan) {
+      settings = normSettings(Object.assign({}, clone(globalS), clone(month.plan), { autoV: 2 }));
+      frozen = true;
+    } else { settings = globalS; frozen = false; }
+  }
 
   /* ---------- Penyimpanan ---------- */
   function readLocal(){
@@ -263,7 +290,11 @@
   }
   function writeLocal(){
     if (month.utang === null) month.utang = utangNow();
-    localAll.settings = clone(settings);
+    if (frozen) {
+      month.plan = pickPlan(settings);
+      ['lastIncome', 'lastUtang', 'lastWeekly'].forEach(k => { globalS[k] = settings[k]; });
+    } else globalS = settings;
+    localAll.settings = clone(globalS);
     localAll.months[curKey] = clone(month);
     try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); setStatus('local'); if (typeof askPersist === 'function' && hasData()) askPersist(); }
     catch (e) { setStatus('err'); }
@@ -950,7 +981,12 @@
   });
   $('#txDate').addEventListener('change', renderDate);
 
+  function renderFrozen(){
+    const n = $('#frozenNote'); n.hidden = !frozen;
+    if (frozen) $('#frozenText').textContent = 'Rencana ' + monthLabel() + ' sudah dibekukan, sehingga riwayatnya tidak ikut berubah. Perubahan di halaman ini hanya berlaku untuk bulan ini.';
+  }
   function renderAll(){
+    renderFrozen();
     curCarry = carryInto(curKey);
     $('#mLabel').textContent = monthLabel();
     renderBagi();
@@ -1198,9 +1234,16 @@
     curY = y; curM = m; curKey = keyOf(y, m);
     $('#txDate').value = '';
     month = normMonth(localAll.months[curKey]);
+    activatePlan();
     renderAll();
     flow($('#panelBagi').hidden ? $('#envList') : $('#posList'));
   }
+  $('#unfreeze').addEventListener('click', () => {
+    // Ganti rencana beku bulan ini dengan salinan rencana berjalan saat ini.
+    month.plan = pickPlan(globalS);
+    activatePlan(); saveMonth();
+    renderAll(); flow($('#posList'));
+  });
   $('#prevM').addEventListener('click', () => shiftMonth(-1));
   $('#nextM').addEventListener('click', () => shiftMonth(1));
 
@@ -1304,8 +1347,9 @@
     const months = {};
     Object.keys(bkPending.months || {}).forEach(k => { if (/^\d{4}-\d{2}$/.test(k)) months[k] = normMonth(bkPending.months[k]); });
     localAll = { settings: normSettings(bkPending.settings), months };
-    settings = normSettings(bkPending.settings);
+    globalS = normSettings(bkPending.settings);
     month = normMonth(months[curKey]);
+    freezePast(); activatePlan();
     dirty.settings = dirty.month = false;
     try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); } catch (e) {}
     bkPending = null; $('#bkConfirm').hidden = true;
@@ -1315,8 +1359,11 @@
 
   /* ---------- Mulai ---------- */
   readLocal();
-  if (localAll.settings) settings = normSettings(localAll.settings);
+  if (localAll.settings) globalS = normSettings(localAll.settings);
+  settings = globalS;
+  freezePast();
   month = normMonth(localAll.months[curKey]);
+  activatePlan();
   renderAll();
   flow($('#panelBagi'));
   setStatus('local');
