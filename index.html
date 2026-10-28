@@ -489,8 +489,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
           </div>
           <button type="button" class="link" id="unlockAll" hidden>Kembalikan semua nominal ke otomatis</button>
         </div>
-        <button type="button" class="primary" id="autoIdeal" hidden>Bagi sesuai persentase ideal</button>
-        <small class="fhint" id="autoIdealHint" hidden>Mengisi semua amplop dan rincian sesuai acuan ideal. Setelah itu, ganti biaya tetap seperti sewa dengan angka sebenarnya.</small>
       </div>
     </div>
 
@@ -1186,8 +1184,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     $('#autoSw').setAttribute('aria-checked', String(auto));
     $('#autoDesc').textContent = auto
       ? 'Amplop terisi sendiri sesuai acuan ideal. Ubah nominal mana pun, misalnya sewa kost, dan amplop lain menyesuaikan agar tidak minus.'
-      : 'Nonaktif. Nominal hanya berubah saat Anda mengisinya atau menekan tombol di bawah.';
-    $('#autoIdeal').hidden = auto; $('#autoIdealHint').hidden = auto;
+      : 'Nonaktif. Nominal hanya berubah saat Anda mengisinya sendiri. Untuk mengisi ulang dari acuan ideal, nyalakan sebentar lalu matikan lagi; hasilnya tetap tersimpan.';
     const anyManual = settings.pos.some(p => idealOf(p.id) && (p.type === 'rinci' ? p.items.some(x => x.m && ITEM_SHARE[x.id]) : p.m));
     $('#unlockAll').hidden = !auto || !anyManual;
     const an = $('#autoNote');
@@ -1751,34 +1748,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
     settings.tpl = tplPending; settings.pos = normSettings({ pos: clone(TEMPLATES[tplPending].pos) }).pos;
     tplPending = null; $('#tplConfirm').hidden = true;
     saveSettings(); renderBagi(); flow($('#posList'));
-  });
-
-  $('#autoIdeal').addEventListener('click', e => {
-    const btn = e.currentTarget, label = 'Bagi sesuai persentase ideal';
-    const reset = (t, ms) => { btn.textContent = t; setTimeout(() => { btn.classList.remove('confirm'); btn.textContent = label; }, ms); };
-    const inc = income();
-    if (!inc) { reset('Isi gaji terlebih dahulu', 2500); $('#inGaji').focus(); return; }
-    if (!settings.pos.some(p => idealOf(p.id))) { reset('Pilih template di atas terlebih dahulu', 3000); return; }
-    if (!btn.classList.contains('confirm')) { btn.classList.add('confirm'); reset('Timpa pembagian saat ini? Ketuk lagi', 3500); return; }
-    btn.classList.remove('confirm'); btn.textContent = label;
-    settings.pos.forEach(p => {
-      const r = idealOf(p.id); if (!r) return;
-      const target = round5k(netOf(inc) * r.t / 100);
-      if (p.type === 'pct') p.value = r.t;
-      else if (p.type === 'fix') p.value = target;
-      else {
-        p.pagu = 0;
-        if (!p.items.length) { p.items.push({ id: newId(), name: p.name || 'Rincian', value: target }); return; }
-        const sug = itemSuggestions(p, inc);
-        if (Object.keys(sug).length) { p.items.forEach(x => { if (sug[x.id] != null) x.value = sug[x.id]; }); return; }
-        const sum = itemsSum(p);
-        p.items.forEach(x => { x.value = sum ? round5k(x.value * target / sum) : round5k(target / p.items.length); });
-        const diff = target - itemsSum(p);
-        if (diff) { const big = p.items.reduce((a, b) => b.value > a.value ? b : a); big.value = Math.max(0, big.value + diff); }
-      }
-    });
-    saveSettings(); renderBagi(); flow($('#posList'));
-    reset('Terbagi sesuai acuan. Sesuaikan biaya tetap Anda', 4000);
   });
 
   $('#txForm').addEventListener('submit', e => {
