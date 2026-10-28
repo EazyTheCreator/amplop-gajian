@@ -90,6 +90,7 @@ async def test_debt_and_carry(b):
     check("utang ikut terbawa", (await page.input_value("#inUtang")) == "1.000.000")
     check("sisa bulan lalu masuk tabungan setelah utang", await amount(page, "k7") == 5_930_000)
     check("tetap pas, tidak melebihi pemasukan", "Pas" in await text(page, "#allocPill"))
+    await page.click("#advToggle")
     await page.click('#carrySeg button[data-v="split"]')
     await page.wait_for_timeout(200)
     check("pilihan ikut dibagi menyebar ke amplop lain", await amount(page, "k1") > 0 and await amount(page, "k7") < 5_930_000)
@@ -123,6 +124,8 @@ async def test_custom_group(b):
     check("tetap pas setelah amplop baru", "Pas" in await text(page, "#allocPill"))
     await page.reload()
     await page.wait_for_timeout(300)
+    check("setelah gaji diisi, aplikasi dibuka di tab Catat", await page.is_visible("#panelCatat"))
+    await page.click("#tabBagi")
     check("tersimpan setelah muat ulang", await amount(page, pid) == 400_000)
     check("tanpa galat skrip", not errors, errors)
 
@@ -171,6 +174,7 @@ async def test_frozen_plan(b):
     await page.wait_for_timeout(600)
     await page.reload()                              # saat dibuka ulang, bulan lalu dibekukan
     await page.wait_for_timeout(300)
+    await page.click("#tabBagi")
     await type_money(page, "#inGaji", "8000000")     # bulan ini
     await type_money(page, "#inum-k1a", "2500000")   # ubah rencana berjalan
     await page.wait_for_timeout(600)
@@ -210,6 +214,7 @@ async def test_priority(b):
     await type_money(page, "#inGaji", "5000000")
     await type_money(page, "#inum-k1a", "2500000")
     save_first = await amount(page, "k7")
+    await page.click("#advToggle")
     await page.click('#prioSeg button[data-v="need"]')
     await page.wait_for_timeout(200)
     need_first = await amount(page, "k7")
@@ -233,6 +238,20 @@ async def test_debt_payoff(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_simple_mode(b):
+    print("Mode sederhana")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    check("pengaturan lanjutan tersembunyi secara bawaan", await page.is_hidden('.pos[data-id="k1"] .seg'))
+    await page.click("#advToggle")
+    check("bisa ditampilkan", await page.is_visible('.pos[data-id="k1"] .seg'))
+    await page.reload()
+    await page.wait_for_timeout(300)
+    await page.click("#tabBagi")
+    check("pilihan diingat", await page.is_visible('.pos[data-id="k1"] .seg'))
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -249,7 +268,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_simple_mode, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

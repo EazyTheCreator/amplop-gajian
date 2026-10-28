@@ -361,6 +361,11 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 
 .debt-more{display:flex;flex-direction:column;gap:7px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
 
+/* Mode sederhana: pengaturan lanjutan disembunyikan */
+.adv-toggle{font-size:.82rem;align-self:flex-start;margin-top:-6px}
+body.simple .seg,body.simple .pfrom,body.simple .pagu,body.simple #groupBox,body.simple .opt-row,body.simple .hint{display:none!important}
+.punit{font-size:.82rem;font-weight:700;color:var(--muted)}
+
 /* Rencana bulan yang dibekukan */
 .frozen{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px 14px;border-radius:var(--r-sm);background:var(--accent-soft);font-size:.84rem;animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
 .frozen .link{font-size:.82rem}

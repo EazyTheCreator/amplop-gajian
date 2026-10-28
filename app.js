@@ -617,6 +617,7 @@
         num.setAttribute('aria-label', p.type === 'fix' ? 'Nominal tetap untuk ' + p.name : 'Persentase untuk ' + p.name);
         num.value = p.type === 'fix' ? (p.value ? fmt(p.value) : '') : pctFmt(p.value);
         num.placeholder = p.type === 'fix' ? 'nominal' : 'persen';
+        if (p.type === 'pct') { const u = document.createElement('span'); u.className = 'punit'; u.textContent = '% dari pemasukan'; num.after(u); }
       }
       list.appendChild(li);
     });
@@ -1343,6 +1344,19 @@
     renderCatat();
   });
 
+  /* ---------- Mode sederhana ---------- */
+  function applyAdvanced(){
+    const adv = !!readMeta().advanced;
+    document.body.classList.toggle('simple', !adv);
+    const t = $('#advToggle');
+    t.textContent = adv ? 'Sembunyikan pengaturan lanjutan' : 'Tampilkan pengaturan lanjutan';
+    t.setAttribute('aria-expanded', String(adv));
+  }
+  $('#advToggle').addEventListener('click', () => {
+    writeMeta({ advanced: !readMeta().advanced });
+    applyAdvanced(); flow($('#posList'));
+  });
+
   /* ---------- Cadangan ---------- */
   // Catatan cadangan disimpan terpisah dari data agar memulihkan cadangan tidak mengubahnya.
   const META_KEY = 'amplop-gajian-meta';
@@ -1459,7 +1473,9 @@
   month = normMonth(localAll.months[curKey]);
   activatePlan();
   renderAll();
-  flow($('#panelBagi'));
+  applyAdvanced();
+  // Setelah gaji diisi, aplikasi langsung dibuka di tab Catat karena itulah yang dipakai sehari-hari.
+  if (income() > 0) setTab('catat'); else flow($('#panelBagi'));
   setStatus('local');
   renderBackupState();
   renderInstall();
