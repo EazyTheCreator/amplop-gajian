@@ -234,6 +234,7 @@
       prio: d.prio === 'need' ? 'need' : 'save',
       carryMode: d.carryMode === 'split' ? 'split' : 'save',
       autoV: 2,
+      debt: d.debt && Number(d.debt.total) > 0 ? { total: Number(d.debt.total), asOf: /^\d{4}-\d{2}$/.test(String(d.debt.asOf)) ? String(d.debt.asOf) : keyOf(new Date().getFullYear(), new Date().getMonth() + 1) } : null,
       lastUtang: d.lastUtang !== undefined && d.lastUtang !== null ? (Number(d.lastUtang) || 0) : movedDebt,
       lastWeekly: Number(d.lastWeekly) || 0
     };
@@ -294,7 +295,7 @@
     if (month.utang === null) month.utang = utangNow();
     if (frozen) {
       month.plan = pickPlan(settings);
-      ['lastIncome', 'lastUtang', 'lastWeekly'].forEach(k => { globalS[k] = settings[k]; });
+      ['lastIncome', 'lastUtang', 'lastWeekly', 'debt'].forEach(k => { globalS[k] = settings[k]; });
     } else globalS = settings;
     localAll.settings = clone(globalS);
     localAll.months[curKey] = clone(month);
@@ -336,6 +337,31 @@
   // Bagian sisa bulan lalu yang disisihkan ke tabungan (setelah utang dibayar).
   const carryReserve = (inc) => carrySaveId() ? Math.min(curCarry, Math.max(0, inc - utangNow())) : 0;
   const netOf = (inc) => Math.max(0, inc - utangNow() - carryReserve(inc));
+
+  /* ---------- Sisa pokok utang ---------- */
+  const addMonths = (k, n) => { let [y, m] = k.split('-').map(Number); m += n; while (m > 12) { m -= 12; y++; } while (m < 1) { m += 12; y--; } return keyOf(y, m); };
+  const payOf = (k) => {
+    if (k === curKey) return utangNow();
+    const m = localAll.months[k];
+    return m && m.utang !== undefined && m.utang !== null ? Number(m.utang) || 0 : (settings.lastUtang || 0);
+  };
+  // Sisa pokok di awal bulan `k`, dihitung dari angka yang dicatat pada bulan `asOf`.
+  function debtStart(k){
+    const d = settings.debt; if (!d) return null;
+    let rem = d.total, cur = d.asOf, guard = 0;
+    while (cur < k && guard++ < 600) { rem -= payOf(cur); cur = addMonths(cur, 1); }
+    while (cur > k && guard++ < 600) { cur = addMonths(cur, -1); rem += payOf(cur); }
+    return Math.max(0, rem);
+  }
+  function debtEta(){
+    const start = debtStart(curKey); if (start === null) return null;
+    const pay = utangNow(), after = Math.max(0, start - pay);
+    if (!after) return { start, after, months: 0, done: addMonths(curKey, 0) };
+    if (!pay) return { start, after, months: null, done: null };
+    const months = Math.ceil(after / pay);
+    return { start, after, months, done: addMonths(curKey, months) };
+  }
+  const monthName = (k) => { const [y, m] = k.split('-').map(Number); return new Intl.DateTimeFormat('id-ID', { month:'long', year:'numeric' }).format(new Date(y, m - 1, 1)); };
   // Sisa uang yang terbawa ke bulan `k` dari bulan-bulan sebelumnya (hanya yang positif).
   const prevKeyOf = (k) => { let [y, m] = k.split('-').map(Number); m--; if (m < 1) { m = 12; y--; } return keyOf(y, m); };
   function carryInto(k){
@@ -773,6 +799,8 @@
         tg.className = 'tag ' + (r > 40 ? 'bad' : r > 30 ? 'warn' : 'ok');
         tg.textContent = r > 40 ? 'Terlalu berat' : r > 30 ? 'Cukup berat' : 'Sehat';
         box.append(sp, tg);
+        const eta = debtEta();
+        if (eta && eta.done) { const t = document.createElement('span'); t.className = 'tag low'; t.textContent = eta.months ? 'Lunas ± ' + monthName(eta.done) : 'Lunas bulan ini'; box.appendChild(t); }
       }
     } else if (drow) drow.remove();
     const uh = $('#utangHint');
@@ -780,6 +808,15 @@
       const r = ut / ((month.gaji + month.lain) || base) * 100;
       uh.textContent = 'Utang dibayar lebih dulu. Persentase acuan dihitung dari sisa ' + rp(netOf(base)) + ' setelah utang. Rasio cicilan ' + pctFmt(Math.round(r * 10) / 10) + '% dari gaji dan pemasukan rutin' + (r > 30 ? ', melebihi batas sehat 30%.' : '.');
     } else uh.textContent = 'Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase acuan dihitung dari sisa pemasukan setelah utang.';
+    // Sisa pokok & perkiraan lunas
+    $('#debtMore').hidden = !(ut > 0);
+    const dti = $('#inDebtTotal'), eta = debtEta();
+    if (document.activeElement !== dti) dti.value = eta ? fmt(eta.start) : '';
+    const de = $('#debtEta');
+    if (!eta) de.textContent = 'Isi sisa pokok utang untuk melihat perkiraan bulan lunas.';
+    else if (!eta.after) de.textContent = 'Utang lunas dengan pembayaran bulan ini.';
+    else if (!eta.months) de.textContent = 'Sisa setelah bulan ini ' + rp(eta.after) + '.';
+    else de.textContent = 'Setelah pembayaran bulan ini sisa ' + rp(eta.after) + '. Dengan cicilan ' + rp(ut) + ' per bulan, perkiraan lunas ' + monthName(eta.done) + ' (' + eta.months + ' bulan lagi).';
     const cr = $('#carryRow');
     cr.hidden = !(curCarry > 0);
     if (curCarry > 0) $('#carryAmt').textContent = '+' + rp(curCarry);
@@ -1029,6 +1066,10 @@
   bindMoney($('#inUtang'), v => {
     month.utang = v; settings.lastUtang = v;
     saveSettings(); saveMonth(); refreshBagiNumbers();
+  });
+  bindMoney($('#inDebtTotal'), v => {
+    settings.debt = v ? { total: v, asOf: curKey } : null;
+    saveSettings(); refreshBagiNumbers();
   });
   $('#posList').addEventListener('click', e => { if (e.target.closest('.debt-edit')) $('#inUtang').focus(); });
   $('#freq').addEventListener('click', e => {

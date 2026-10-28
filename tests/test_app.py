@@ -218,6 +218,21 @@ async def test_priority(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_debt_payoff(b):
+    print("Sisa pokok utang")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    await type_money(page, "#inUtang", "1000000")
+    await type_money(page, "#inDebtTotal", "5000000")
+    eta = await text(page, "#debtEta")
+    check("perkiraan lunas 4 bulan lagi", "4.000.000" in eta and "4 bulan lagi" in eta, eta)
+    await page.wait_for_timeout(600)
+    await page.click("#nextM")
+    await page.wait_for_timeout(300)
+    check("bulan berikutnya sisa pokok berkurang otomatis", (await page.input_value("#inDebtTotal")) == "4.000.000")
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -234,7 +249,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_priority, test_debt_payoff, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

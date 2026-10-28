@@ -118,6 +118,11 @@
         <label for="inUtang">Utang &amp; cicilan bulan ini <span class="opt">(isi jika ada)</span></label>
         <div class="money"><span>Rp</span><input id="inUtang" inputmode="numeric" autocomplete="off" placeholder="0"></div>
         <small class="fhint debt-hint" id="utangHint">Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase acuan dihitung dari sisa pemasukan setelah utang.</small>
+        <div class="debt-more" id="debtMore" hidden>
+          <label for="inDebtTotal">Sisa pokok utang di awal bulan ini <span class="opt">(opsional)</span></label>
+          <div class="money"><span>Rp</span><input id="inDebtTotal" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <small class="fhint" id="debtEta"></small>
+        </div>
       </div>
       <div class="field">
         <span class="flabel"><span class="step">3</span>Pembagian</span>
