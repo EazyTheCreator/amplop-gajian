@@ -808,6 +808,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
       if (x && (x.id === 'k5c' || x.id === 'u5c')) { movedDebt += Number(x.value) || 0; return false; }
       return true;
     }) }) : p);
+    // Data dari versi sebelum pembagian otomatis: semua amplop dan rincian template dibuka kuncinya sekali.
+    const legacy = Array.isArray(d.pos) && !(Number(d.autoV) >= 2);
     const tpl = d.tpl === 'umum' || d.tpl === 'kost' ? d.tpl : (pos.some(p => /^u\d+$/.test(String(p && p.id))) ? 'umum' : 'kost');
     return {
       tpl,
@@ -819,14 +821,15 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
         value: Number(p.value) || 0,
         c: ((Number(p.c) || 1) - 1) % 10 + 1,
         items: (Array.isArray(p.items) ? p.items : []).map(x => ({ id:String(x.id), name:String(x.name ?? ''), value: Number(x.value) || 0,
-          m: x.m !== undefined ? !!x.m : (DEFAULT_VAL[x.id] !== undefined && (Number(x.value) || 0) !== DEFAULT_VAL[x.id]) })),
+          m: legacy ? false : !!x.m })),
         pagu: Number(p.pagu) || 0,
-        m: p.m !== undefined ? !!p.m : p.type === 'fix',
+        m: legacy ? false : !!p.m,
         g: ['need', 'save', 'want', 'give'].includes(p.g) ? p.g : '',
         t: Math.max(0, Math.min(100, Number(p.t) || 0))
       })),
       lastIncome: Number(d.lastIncome) || 0,
-      auto: d.auto !== false,
+      auto: legacy ? true : d.auto !== false,
+      autoV: 2,
       lastUtang: d.lastUtang !== undefined && d.lastUtang !== null ? (Number(d.lastUtang) || 0) : movedDebt,
       lastWeekly: Number(d.lastWeekly) || 0
     };
