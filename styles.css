@@ -1,3 +1,6 @@
+/* Font disimpan di situs ini sendiri (SIL Open Font License), tidak dimuat dari pihak ketiga */
+@font-face{font-family:"Plus Jakarta Sans";src:url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
+@font-face{font-family:"Bricolage Grotesque";src:url(fonts/bricolage-grotesque-latin-wght-normal.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
 /* Layout: satu kolom ala aplikasi ponsel — kartu ringkasan berwarna di atas, tab pil, kartu-kartu membulat dengan ikon stiker per kategori */
 html{color-scheme:light}
 :root{
@@ -350,6 +353,21 @@ input[type="date"]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer
 .tx-desc{font-weight:700;overflow-wrap:anywhere}
 .tx-pos{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
 .tx-amt{font-family:var(--f-display);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Kaki halaman */
+.foot{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:.78rem;color:var(--muted);padding:4px 8px 0;max-width:60ch;margin:0 auto}
+.foot a{color:var(--accent);font-weight:700}
+
+/* Halaman dokumen (privasi) */
+.doc{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.doc .card{gap:10px}
+.doc h1{font-size:1.6rem}
+.doc h2{font-size:1.05rem;margin-top:4px}
+.doc p,.doc li{font-size:.92rem;line-height:1.65;max-width:65ch;margin:0}
+.doc ol,.doc ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.doc .meta{color:var(--muted);font-size:.84rem}
+.doc a{color:var(--accent);font-weight:700}
+.back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--accent);text-decoration:none;font-size:.9rem}
 
 /* Cadangan */
 .bk-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:14px 16px;border-radius:var(--r);background:var(--warn-soft);box-shadow:var(--shadow);animation:rise .5s cubic-bezier(.2,.8,.2,1) both}

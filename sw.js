@@ -3,7 +3,8 @@
 const CACHE = 'amplop-gajian-v3';
 const SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest', './privasi.html',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon-64.png'
+  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon-64.png',
+  './fonts/plus-jakarta-sans-latin-wght-normal.woff2', './fonts/bricolage-grotesque-latin-wght-normal.woff2'
 ];
 
 self.addEventListener('install', (e) => {
