@@ -117,7 +117,7 @@
       <div class="field">
         <label for="inUtang">Utang &amp; cicilan bulan ini <span class="opt">(isi jika ada)</span></label>
         <div class="money"><span>Rp</span><input id="inUtang" inputmode="numeric" autocomplete="off" placeholder="0"></div>
-        <small class="fhint debt-hint" id="utangHint">Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase ideal dihitung dari sisa pemasukan setelah utang.</small>
+        <small class="fhint debt-hint" id="utangHint">Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase acuan dihitung dari sisa pemasukan setelah utang.</small>
       </div>
       <div class="field">
         <span class="flabel"><span class="step">3</span>Pembagian</span>
@@ -127,6 +127,14 @@
             <button type="button" class="switch" id="autoSw" role="switch" aria-checked="true" aria-label="Pembagian otomatis"><span></span></button>
           </div>
           <button type="button" class="link" id="unlockAll" hidden>Kembalikan semua nominal ke otomatis</button>
+          <div class="opt-row" id="prioRow">
+            <span id="prioLbl">Saat uang tidak cukup, utamakan</span>
+            <div class="mini-seg" id="prioSeg" role="group" aria-labelledby="prioLbl"><button type="button" data-v="save">Tabungan</button><button type="button" data-v="need">Kebutuhan pokok</button></div>
+          </div>
+          <div class="opt-row">
+            <span id="carryLbl">Sisa bulan lalu</span>
+            <div class="mini-seg" id="carrySeg" role="group" aria-labelledby="carryLbl"><button type="button" data-v="save">Masuk tabungan</button><button type="button" data-v="split">Ikut dibagi</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -137,21 +145,21 @@
     </div>
     <p class="hint">Nominal awal hanyalah perkiraan umum. Ganti dengan angka Anda sendiri.</p>
     <details class="guide" id="guide">
-      <summary>Panduan persentase ideal</summary>
+      <summary>Panduan acuan pembagian</summary>
       <div class="guide-body">
-        <p>Acuan ini mengadaptasi pola umum 50/30/20 (kebutuhan, keinginan, tabungan). Porsi kebutuhan dibuat sedikit lebih besar, sekitar 60%, karena biaya tempat tinggal dan makan di kota besar umumnya menyerap porsi yang lebih tinggi.</p>
+        <p>Acuan ini mengadaptasi pola 50/30/20 (kebutuhan, keinginan, tabungan) yang dipopulerkan oleh Elizabeth Warren dan Amelia Warren Tyagi dalam buku <em>All Your Worth</em> (2005). Porsi kebutuhan dibuat sedikit lebih besar, sekitar 60%, karena biaya tempat tinggal dan makan di kota besar umumnya menyerap porsi yang lebih tinggi. Rentang per amplop dan angka lainnya merupakan penyesuaian umum, bukan standar resmi.</p>
         <ul>
           <li><strong>Kebutuhan pokok, maksimal ±60%.</strong> Anak kost: tempat tinggal 20–30%, dapur dan makan 10–20%, transportasi 5–10%, kebutuhan harian 3–5%, tagihan 2–5%, kuliah 2–5%. Umum: tempat tinggal 15–30%, makan 10–20%, transportasi 5–12%, kebutuhan harian 3–6%, tagihan 2–5%, kesehatan 2–5%, keluarga dan orang tua maksimal 10%.</li>
           <li><strong>Tabungan dan dana darurat, minimal 20%</strong>: tabungan minimal 10%, dana darurat 5–10% sampai terkumpul 3–6 kali pengeluaran bulanan.</li>
           <li><strong>Hiburan dan gaya hidup, maksimal 15%.</strong></li>
           <li><strong>Sedekah dan donasi, sekitar 2,5–5%.</strong></li>
         </ul>
-        <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase ideal dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
+        <p><strong>Rincian di dalam amplop.</strong> Setiap amplop berincian memiliki pagu. Jika pagu dikosongkan, pagu mengikuti persentase acuan dari pemasukan; jika diisi, pagu mengikuti angka Anda. Saran tiap rincian dihitung dari pagu tersebut, misalnya tempat tinggal anak kost: sewa 85%, listrik 11%, galon 4%; tempat tinggal umum: sewa atau KPR 65%, listrik 15%, internet 10%, air 5%, iuran lingkungan 5%. Rincian yang Anda tambahkan sendiri, termasuk cicilan, mengurangi pagu lebih dulu sebelum sisanya dibagi.</p>
         <p><strong>Gaji mingguan.</strong> Pilih skema Mingguan jika penghasilan Anda diterima per minggu, misalnya pekerja harian, pengemudi daring, atau pekerja lepas. Total sebulan dihitung dari gaji per minggu dikalikan jumlah hari gajian di bulan tersebut (4 atau 5 kali). Karena penghasilan mingguan cenderung naik turun, acuan dana darurat dinaikkan menjadi 7–12% dan hiburan dibatasi maksimal 12%. Biaya bulanan seperti sewa sebaiknya dicicil sedikit setiap minggu, dan di bulan dengan lima kali gajian, gajian kelima sebaiknya langsung masuk tabungan atau dana darurat.</p>
-        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan ideal begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Semua amplop ikut otomatis, termasuk tabungan dan dana darurat. Urutan pengurangannya: hiburan, makan di luar, dan langganan lebih dulu; lalu kebutuhan lain dihemat hingga 85% dari acuannya; lalu sedekah, tabungan, dan dana darurat sampai batas minimalnya; baru kemudian kebutuhan lain hingga 70%. Amplop yang Anda tambahkan sendiri ikut otomatis setelah diberi kelompok (kebutuhan, tabungan, keinginan, atau sosial) dan acuan persennya. Tabungan dan dana darurat tidak menjadi prioritas pengurangan, dan jika ada sisa, sisanya justru masuk ke tabungan dan dana darurat.</p>
+        <p><strong>Pembagian otomatis.</strong> Saat aktif, semua amplop dan rincian terisi sendiri sesuai acuan umum begitu gaji diisi. Jika Anda mengubah satu nominal, misalnya sewa kost menjadi Rp1.500.000, nominal itu dikunci dan amplop lain menyesuaikan agar tidak minus. Semua amplop ikut otomatis, termasuk tabungan dan dana darurat. Hiburan, makan di luar, dan langganan selalu dikurangi lebih dulu. Selanjutnya bergantung pada pilihan Anda: jika <em>Tabungan</em> diutamakan, kebutuhan lain dihemat hingga 85% dari acuannya sebelum tabungan dan dana darurat turun ke batas minimalnya; jika <em>Kebutuhan pokok</em> diutamakan, urutannya dibalik. Setelah itu kebutuhan lain dapat turun hingga 70%. Amplop yang Anda tambahkan sendiri ikut otomatis setelah diberi kelompok (kebutuhan, tabungan, keinginan, atau sosial) dan acuan persennya. Jika ada sisa, sisanya masuk ke tabungan dan dana darurat.</p>
         <p>Urutan prioritas saat gajian: sisihkan tabungan dan dana darurat lebih dulu, lalu bayar sewa dan tagihan tetap, baru kemudian kebutuhan harian dan hiburan. </p>
-        <p><strong>Utang dan cicilan.</strong> Isi pada kolom tersendiri di atas. Utang dibayar lebih dulu dari pemasukan, lalu seluruh persentase ideal dihitung dari sisa pemasukan setelah utang. Total cicilan sebaiknya tidak melebihi 30% pemasukan; di atas 40% sudah tergolong berat.</p>
-        <p><strong>Sisa bulan lalu.</strong> Uang yang tersisa di akhir bulan (pemasukan dikurangi utang dan pengeluaran yang dicatat) otomatis ditambahkan ke total uang bulan berikutnya.</p>
+        <p><strong>Utang dan cicilan.</strong> Isi pada kolom tersendiri di atas. Utang dibayar lebih dulu dari pemasukan, lalu seluruh persentase acuan dihitung dari sisa pemasukan setelah utang. Total cicilan sebaiknya tidak melebihi 30% pemasukan; di atas 40% sudah tergolong berat.</p>
+        <p><strong>Sisa bulan lalu.</strong> Uang yang tersisa di akhir bulan (pemasukan dikurangi utang dan pengeluaran yang dicatat) otomatis terbawa ke bulan berikutnya. Secara bawaan, sisa ini langsung masuk amplop Tabungan; Anda dapat memilih agar sisa ikut dibagi ke semua amplop.</p>
         <p class="fine">Angka di atas adalah pedoman umum perencanaan keuangan pribadi, bukan nasihat keuangan profesional. Sesuaikan dengan kondisi dan biaya hidup di kota Anda.</p>
       </div>
     </details>

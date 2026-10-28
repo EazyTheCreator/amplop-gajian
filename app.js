@@ -109,7 +109,7 @@
     {id:'k9', name:'Hiburan & gaya hidup', type:'pct', value:5, c:9, items:[]},
     {id:'k10', name:'Sedekah & donasi', type:'pct', value:2.5, c:10, items:[]}
   ];
-  // Acuan persentase ideal per amplop template (persen dari total pemasukan).
+  // Acuan persentase acuan per amplop template (persen dari total pemasukan).
   const IDEAL = {
     k1:{g:'need', min:20, max:30, t:25}, k2:{g:'need', min:10, max:20, t:15}, k3:{g:'need', min:3, max:5, t:4},
     k4:{g:'need', min:5, max:10, t:6},  k5:{g:'need', min:2, max:5, t:4},   k6:{g:'need', min:2, max:5, t:4},
@@ -231,6 +231,8 @@
       })),
       lastIncome: Number(d.lastIncome) || 0,
       auto: legacy ? true : d.auto !== false,
+      prio: d.prio === 'need' ? 'need' : 'save',
+      carryMode: d.carryMode === 'split' ? 'split' : 'save',
       autoV: 2,
       lastUtang: d.lastUtang !== undefined && d.lastUtang !== null ? (Number(d.lastUtang) || 0) : movedDebt,
       lastWeekly: Number(d.lastWeekly) || 0
@@ -324,7 +326,16 @@
   let curCarry = 0;
   const income = () => month.gaji + month.lain + curCarry;
   const utangNow = () => month.utang !== null ? month.utang : (settings.lastUtang || 0);
-  const netOf = (inc) => Math.max(0, inc - utangNow());
+  // Sisa bulan lalu masuk amplop tabungan (bawaan) atau ikut dibagi seperti pemasukan biasa.
+  function carrySaveId(){
+    if (settings.carryMode === 'split' || !curCarry) return null;
+    const p = settings.pos.find(x => (x.id === 'k7' || x.id === 'u8') && x.type !== 'rinci')
+      || settings.pos.find(x => x.type !== 'rinci' && idealOf(x.id) && idealOf(x.id).g === 'save');
+    return p ? p.id : null;
+  }
+  // Bagian sisa bulan lalu yang disisihkan ke tabungan (setelah utang dibayar).
+  const carryReserve = (inc) => carrySaveId() ? Math.min(curCarry, Math.max(0, inc - utangNow())) : 0;
+  const netOf = (inc) => Math.max(0, inc - utangNow() - carryReserve(inc));
   // Sisa uang yang terbawa ke bulan `k` dari bulan-bulan sebelumnya (hanya yang positif).
   const prevKeyOf = (k) => { let [y, m] = k.split('-').map(Number); m--; if (m < 1) { m = 12; y--; } return keyOf(y, m); };
   function carryInto(k){
@@ -353,15 +364,16 @@
   const itemAmt = (p, x, inc) => isAutoItem(p, x) ? (plan(inc).item[x.id] || 0) : x.value;
   const allocOf = (p, inc) => {
     if (p.type === 'rinci') return p.items.reduce((s, x) => s + itemAmt(p, x, inc), 0);
-    return isAutoEnv(p) ? (plan(inc).env[p.id] || 0) : manualEnvAmt(p, inc);
+    const extra = p.id === carrySaveId() ? carryReserve(inc) : 0;
+    return extra + (isAutoEnv(p) ? (plan(inc).env[p.id] || 0) : manualEnvAmt(p, inc));
   };
   // Rincian yang dianggap keinginan: dikurangi paling awal saat uang tidak cukup.
   const WANT_ITEMS = new Set(['k2e', 'u2b', 'k5b', 'u5b']);
   let planCache = { key:'', val:null };
-  // Pembagian otomatis: nominal yang diisi sendiri dikunci, sisanya dibagi menurut acuan ideal,
+  // Pembagian otomatis: nominal yang diisi sendiri dikunci, sisanya dibagi menurut acuan umum,
   // lalu dikurangi bertahap bila tidak cukup atau ditambahkan ke tabungan bila berlebih.
   function plan(inc){
-    const key = inc + '|' + utangNow() + '|' + settings.freq + '|' + JSON.stringify(settings.pos);
+    const key = [inc, utangNow(), settings.freq, settings.prio, settings.carryMode, curCarry, JSON.stringify(settings.pos)].join('|');
     if (planCache.key === key) return planCache.val;
     const B = netOf(inc), parts = [];
     let manual = 0;
@@ -381,17 +393,20 @@
     const avail = B - manual;
     let gap = parts.reduce((s, x) => s + x.amt, 0) - avail, deficit = 0;
     if (gap > 0) {
-      // Urutan pengurangan: tabungan & dana darurat bukan prioritas, jadi dikurangi setelah
-      // keinginan dan setelah kebutuhan fleksibel dihemat lebih dulu.
-      const tiers = [
-        x => x.want ? 0 : null,
-        x => (x.g === 'need' && !x.want) ? x.target * 0.85 : null,
-        x => x.g === 'give' ? B * x.min / 100 : null,
-        x => x.g === 'save' ? B * x.min / 100 : null,
+      // Urutan pengurangan mengikuti pilihan pengguna:
+      // 'save' = tabungan diutamakan (kebutuhan fleksibel dihemat dulu),
+      // 'need' = kebutuhan pokok diutamakan (tabungan turun ke batas minimal dulu).
+      const needSoft = x => (x.g === 'need' && !x.want) ? x.target * 0.85 : null;
+      const giveMin = x => x.g === 'give' ? B * x.min / 100 : null;
+      const saveMin = x => x.g === 'save' ? B * x.min / 100 : null;
+      const tiers = (settings.prio === 'need'
+        ? [x => x.want ? 0 : null, giveMin, saveMin, needSoft]
+        : [x => x.want ? 0 : null, needSoft, giveMin, saveMin]
+      ).concat([
         x => (x.g === 'need' && !x.want) ? x.target * 0.7 : null,
         x => (x.g === 'save' || x.g === 'give') ? 0 : null,
         () => 0
-      ];
+      ]);
       for (const floorOf of tiers) {
         if (gap <= 0) break;
         const sel = parts.map(x => [x, floorOf(x)]).filter(([x, f]) => f !== null && x.amt > f);
@@ -598,8 +613,8 @@
       groupPct[r ? r.g : 'other'] += share;
       const box = row.querySelector('.pideal'); box.textContent = '';
       const span = document.createElement('span');
-      if (!r) { span.textContent = 'Amplop tambahan, tanpa acuan ideal · ' + pctFmt(Math.round(share * 10) / 10) + '% dari pemasukan'; box.appendChild(span); return; }
-      span.textContent = (r.custom ? 'Acuan Anda ' : 'Ideal ') + rangeText(r) + (preview ? '' : ' · saat ini ' + pctFmt(Math.round(share * 10) / 10) + '%');
+      if (!r) { span.textContent = 'Amplop tambahan, tanpa acuan umum · ' + pctFmt(Math.round(share * 10) / 10) + '% dari pemasukan'; box.appendChild(span); return; }
+      span.textContent = (r.custom ? 'Acuan Anda ' : 'Acuan ') + rangeText(r) + (preview ? '' : ' · saat ini ' + pctFmt(Math.round(share * 10) / 10) + '%');
       box.appendChild(span);
       if (isWeekly() && !preview) { const w = document.createElement('span'); w.className = 'tag low'; w.textContent = '≈ ' + rpShort(Math.round(amt / weeksNow())) + '/minggu'; box.appendChild(w); }
       if (!preview) {
@@ -611,10 +626,15 @@
     const auto = isAuto(), pl = plan(base), nb0 = netOf(base);
     $('#autoSw').setAttribute('aria-checked', String(auto));
     $('#autoDesc').textContent = auto
-      ? 'Amplop terisi sendiri sesuai acuan ideal. Ubah nominal mana pun, misalnya sewa kost, dan amplop lain menyesuaikan agar tidak minus.'
-      : 'Nonaktif. Nominal hanya berubah saat Anda mengisinya sendiri. Untuk mengisi ulang dari acuan ideal, nyalakan sebentar lalu matikan lagi; hasilnya tetap tersimpan.';
+      ? 'Amplop terisi sendiri sesuai acuan umum. Ubah nominal mana pun, misalnya sewa kost, dan amplop lain menyesuaikan agar tidak minus.'
+      : 'Nonaktif. Nominal hanya berubah saat Anda mengisinya sendiri. Untuk mengisi ulang dari acuan umum, nyalakan sebentar lalu matikan lagi; hasilnya tetap tersimpan.';
     const anyManual = settings.pos.some(p => idealOf(p.id) && (p.type === 'rinci' ? p.items.some(x => x.m && ITEM_SHARE[x.id]) : p.m));
     $('#unlockAll').hidden = !auto || !anyManual;
+    $('#prioRow').hidden = !auto;
+    document.querySelectorAll('#prioSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === settings.prio)));
+    document.querySelectorAll('#carrySeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === settings.carryMode)));
+    const cs = carrySaveId(), csp = cs && settings.pos.find(x => x.id === cs);
+    $('#carryNote').textContent = csp ? 'Otomatis dimasukkan ke amplop ' + (csp.name || 'Tabungan') + '.' : 'Otomatis ditambahkan ke total uang dan ikut dibagi ke amplop.';
     const an = $('#autoNote');
     if (auto && !preview && pl.deficit > 0) {
       an.hidden = false; an.className = 'autonote bad'; an.textContent = '';
@@ -686,7 +706,7 @@
         if (preview) info.textContent = 'Isi gaji terlebih dahulu untuk menghitung pagu dan saran rincian.';
         else if (!pagu) info.textContent = 'Isi pagu untuk mendapatkan saran nominal rincian.';
         else {
-          const src = p.pagu > 0 ? 'Pagu manual. ' : (ideal ? 'Mengikuti ideal ' + pctFmt(idealOf(p.id).t) + '% dari pemasukan. ' : '');
+          const src = p.pagu > 0 ? 'Pagu manual. ' : (ideal ? 'Mengikuti acuan ' + pctFmt(idealOf(p.id).t) + '% dari pemasukan. ' : '');
           info.appendChild(document.createTextNode(src + 'Terisi ' + rp(filled) + ' dari ' + rp(pagu) + ' · '));
           const st = document.createElement('span');
           const gap = pagu - filled;
@@ -718,7 +738,7 @@
       head.innerHTML = '<span>Kelompok</span><span class="g-pct">Saat ini</span><span style="justify-self:end">Acuan</span>';
       gb.appendChild(head);
       const rows = GROUPS.slice();
-      if (groupPct.other > 0) rows.push({ g:'other', name:'Amplop tambahan', sub:'tanpa acuan ideal', min:null, max:null });
+      if (groupPct.other > 0) rows.push({ g:'other', name:'Amplop tambahan', sub:'tanpa acuan umum', min:null, max:null });
       rows.forEach(G => {
         const share = groupPct[G.g];
         const row = document.createElement('div'); row.className = 'g-row';
@@ -758,8 +778,8 @@
     const uh = $('#utangHint');
     if (ut > 0 && !preview) {
       const r = ut / ((month.gaji + month.lain) || base) * 100;
-      uh.textContent = 'Utang dibayar lebih dulu. Persentase ideal dihitung dari sisa ' + rp(netOf(base)) + ' setelah utang. Rasio cicilan ' + pctFmt(Math.round(r * 10) / 10) + '% dari gaji dan pemasukan rutin' + (r > 30 ? ', melebihi batas sehat 30%.' : '.');
-    } else uh.textContent = 'Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase ideal dihitung dari sisa pemasukan setelah utang.';
+      uh.textContent = 'Utang dibayar lebih dulu. Persentase acuan dihitung dari sisa ' + rp(netOf(base)) + ' setelah utang. Rasio cicilan ' + pctFmt(Math.round(r * 10) / 10) + '% dari gaji dan pemasukan rutin' + (r > 30 ? ', melebihi batas sehat 30%.' : '.');
+    } else uh.textContent = 'Contoh: cicilan motor, KPR, pinjaman, atau paylater. Utang dibayar lebih dulu, lalu persentase acuan dihitung dari sisa pemasukan setelah utang.';
     const cr = $('#carryRow');
     cr.hidden = !(curCarry > 0);
     if (curCarry > 0) $('#carryAmt').textContent = '+' + rp(curCarry);
@@ -1085,6 +1105,14 @@
       settings.auto = false;
     } else settings.auto = true;
     saveSettings(); renderBagi(); flow($('#posList'));
+  });
+  $('#prioSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-v]'); if (!b || b.dataset.v === settings.prio) return;
+    settings.prio = b.dataset.v; saveSettings(); refreshBagiNumbers();
+  });
+  $('#carrySeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-v]'); if (!b || b.dataset.v === settings.carryMode) return;
+    settings.carryMode = b.dataset.v; saveSettings(); refreshBagiNumbers();
   });
   $('#unlockAll').addEventListener('click', () => {
     settings.pos.forEach(p => { p.m = false; p.items.forEach(x => { x.m = false; }); });
