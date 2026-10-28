@@ -205,6 +205,20 @@
       <p class="form-msg" id="txMsg" role="status"></p>
     </form>
 
+    <details class="guide recon" id="recon">
+      <summary>Cocokkan dengan saldo sebenarnya</summary>
+      <div class="guide-body">
+        <p>Jika ada pengeluaran yang lupa dicatat, sisa uang di aplikasi akan lebih besar dari kenyataan. Isi total uang Anda saat ini, yaitu saldo rekening, dompet, dan dompet digital. Selisihnya akan dicatat sebagai koreksi agar angka kembali akurat.</p>
+        <div class="recon-row"><span>Sisa uang menurut catatan</span><b id="reconApp">Rp0</b></div>
+        <div class="field">
+          <label for="reconIn">Total uang Anda saat ini</label>
+          <div class="money"><span>Rp</span><input id="reconIn" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+        </div>
+        <button type="button" class="primary" id="reconBtn">Cocokkan</button>
+        <p class="form-msg" id="reconMsg" role="status"></p>
+      </div>
+    </details>
+
     <div class="sec-head"><h2>Sisa per amplop</h2><small>Ketuk kartu untuk mencatat</small></div>
     <p class="note" id="catatNote" hidden>Gaji bulan ini belum diisi, sehingga setiap amplop masih bernilai Rp0. Isi gaji di tab Bagi gaji.</p>
     <ul class="env-list" id="envList"></ul>

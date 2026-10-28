@@ -180,6 +180,25 @@ async def test_frozen_plan(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_reconcile(b):
+    print("Cocokkan saldo")
+    page, errors = await fresh(b)
+    await type_money(page, "#inGaji", "8000000")
+    await page.click("#tabCatat")
+    await page.click("#recon summary")
+    check("sisa menurut catatan tampil", "8.000.000" in await text(page, "#reconApp"))
+    await type_money(page, "#reconIn", "7800000")
+    await page.click("#reconBtn")
+    await page.wait_for_timeout(700)
+    check("kekurangan dicatat sebagai koreksi", "7.800.000" in await text(page, "#sLeft"))
+    await type_money(page, "#reconIn", "7900000")
+    await page.click("#reconBtn")
+    await page.wait_for_timeout(700)
+    check("kelebihan uang juga dikoreksi", "7.900.000" in await text(page, "#sLeft"))
+    check("riwayat menampilkan koreksi", "Koreksi saldo" in await text(page, "#txList"))
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -196,7 +215,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_frozen_plan, test_reconcile, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

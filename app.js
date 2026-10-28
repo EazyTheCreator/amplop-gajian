@@ -456,7 +456,9 @@
   const spentBy = () => { const m = {}; month.tx.forEach(t => { m[t.posId] = (m[t.posId] || 0) + t.amt; const k = t.posId + '|' + t.itemId; m[k] = (m[k] || 0) + t.amt; }); return m; };
   const totalSpent = () => month.tx.reduce((s, t) => s + t.amt, 0);
   const posName = (id) => { const p = settings.pos.find(x => x.id === id); return p ? (p.name || 'Tanpa nama') : 'Amplop terhapus'; };
+  const ADJ = '__adj';   // transaksi koreksi hasil pencocokan saldo
   const txLabel = (t) => {
+    if (t.posId === ADJ) return 'Koreksi saldo';
     const p = settings.pos.find(x => x.id === t.posId);
     if (!p) return 'Amplop terhapus';
     const i = t.itemId && p.items.find(x => x.id === t.itemId);
@@ -873,7 +875,7 @@
     const last = new Date(curY, curM, 0).getDate();
     d.min = keyOf(curY, curM) + '-01'; d.max = keyOf(curY, curM) + '-' + String(last).padStart(2, '0');
     if (!d.value || d.value < d.min || d.value > d.max) d.value = defaultTxDate();
-    renderCats(); renderDate();
+    renderCats(); renderDate(); renderRecon();
 
     const inc = income(), spent = spentBy();
     $('#catatNote').hidden = inc !== 0;
@@ -943,12 +945,13 @@
       const p = settings.pos.find(x => x.id === t.posId);
       const x = p && t.itemId ? p.items.find(i => i.id === t.itemId) : null;
       const li = document.createElement('li'); li.className = 'tx'; li.dataset.id = t.id;
-      li.appendChild(icoEl(p ? iconKey(p, x || undefined) : 'wallet', p ? p.c : 0, 'sm'));
+      if (t.posId === ADJ) { const ic = icoEl('wallet', 0, 'sm'); ic.style.setProperty('--tone', 'var(--warn)'); li.appendChild(ic); }
+      else li.appendChild(icoEl(p ? iconKey(p, x || undefined) : 'wallet', p ? p.c : 0, 'sm'));
       const mid = document.createElement('div');
       mid.innerHTML = '<div class="tx-desc"></div><div class="tx-pos"></div>';
       mid.querySelector('.tx-desc').textContent = t.desc || (x ? x.name : (p ? p.name : '')) || 'Tanpa keterangan';
       mid.querySelector('.tx-pos').textContent = txLabel(t);
-      const amt = document.createElement('span'); amt.className = 'tx-amt'; amt.textContent = rp(t.amt);
+      const amt = document.createElement('span'); amt.className = 'tx-amt' + (t.amt < 0 ? ' plus' : ''); amt.textContent = t.amt < 0 ? '+' + rp(-t.amt) : rp(t.amt);
       const del = document.createElement('button'); del.type = 'button'; del.className = 'pdel'; del.textContent = 'Hapus';
       li.append(mid, amt, del);
       list.appendChild(li);
@@ -1248,6 +1251,28 @@
   $('#nextM').addEventListener('click', () => shiftMonth(1));
 
   window.addEventListener('pagehide', () => { if (dirty.settings) flush('settings'); if (dirty.month) flush('month'); });
+
+  /* ---------- Cocokkan saldo ---------- */
+  const leftNow = () => income() - totalSpent() - utangNow();
+  function renderRecon(){
+    $('#reconApp').textContent = rp(leftNow());
+  }
+  bindMoney($('#reconIn'), () => { $('#reconMsg').textContent = ''; });
+  $('#reconBtn').addEventListener('click', () => {
+    const msg = $('#reconMsg'), raw = $('#reconIn').value.trim();
+    if (!raw) { msg.className = 'form-msg bad'; msg.textContent = 'Isi total uang Anda saat ini terlebih dahulu.'; $('#reconIn').focus(); return; }
+    const actual = digits(raw), diff = leftNow() - actual;
+    if (Math.abs(diff) < 1) { msg.className = 'form-msg'; msg.textContent = 'Sudah cocok. Catatan Anda sesuai dengan uang yang ada.'; return; }
+    const tx = { id: newId(), date: defaultTxDate(), posId: ADJ, itemId: '', amt: diff,
+      desc: diff > 0 ? 'Pengeluaran yang tidak tercatat' : 'Uang lebih dari catatan' };
+    month.tx.push(tx); saveMonth();
+    $('#reconIn').value = '';
+    msg.className = 'form-msg';
+    msg.textContent = diff > 0
+      ? 'Tercatat koreksi ' + rp(diff) + ' sebagai pengeluaran yang tidak tercatat. Sisa uang kini sama dengan saldo Anda.'
+      : 'Tercatat koreksi +' + rp(-diff) + ' karena uang Anda lebih banyak dari catatan. Sisa uang kini sama dengan saldo Anda.';
+    renderCatat();
+  });
 
   /* ---------- Cadangan ---------- */
   // Catatan cadangan disimpan terpisah dari data agar memulihkan cadangan tidak mengubahnya.
