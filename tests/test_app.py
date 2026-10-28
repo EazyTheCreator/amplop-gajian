@@ -138,6 +138,25 @@ async def test_legacy_unlock(b):
     check("tanpa galat skrip", not errors, errors)
 
 
+async def test_backup_reminder(b):
+    print("Pengingat cadangan")
+    page, errors = await fresh(b)
+    check("tanpa data, pengingat tersembunyi", await page.is_hidden("#bkBanner"))
+    await type_money(page, "#inGaji", "8000000")
+    await page.wait_for_timeout(600)
+    await page.reload()
+    await page.wait_for_timeout(300)
+    check("ada data tanpa cadangan, pengingat muncul", await page.is_visible("#bkBanner"))
+    await page.click("#bkLater")
+    check("tombol Nanti menyembunyikan pengingat", await page.is_hidden("#bkBanner"))
+    async with page.expect_download() as dl:
+        await page.click("#bkExport")
+    d = await dl.value
+    check("cadangan terunduh sebagai .json", d.suggested_filename.endswith(".json"), d.suggested_filename)
+    check("tanggal cadangan terakhir tercatat", "Cadangan terakhir" in await text(page, "#bkLast"))
+    check("tanpa galat skrip", not errors, errors)
+
+
 async def test_layout(b):
     print("Tata letak")
     for scheme in ("light", "dark"):
@@ -154,7 +173,7 @@ async def test_layout(b):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_layout):
+        for t in (test_auto_split, test_debt_and_carry, test_weekly, test_custom_group, test_legacy_unlock, test_backup_reminder, test_layout):
             await t(b)
         await b.close()
     failed = [r for r in results if not r[1]]

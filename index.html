@@ -6,6 +6,13 @@
 <meta name="description" content="Bagi gaji ke amplop anggaran dan catat pengeluaran bulanan. Data tersimpan di perangkat Anda.">
 <meta name="theme-color" content="#5B2EE8">
 <title>Amplop Gajian</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Amplop Gajian">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -43,6 +50,11 @@
       <div class="ring-txt"><b id="ringPct">–</b><small>terpakai</small></div>
     </div>
   </section>
+
+  <div class="bk-banner" id="bkBanner" role="status" hidden>
+    <div class="bk-banner-txt"><strong id="bkBannerTitle">Amankan data Anda</strong><small id="bkBannerText"></small></div>
+    <div class="bk-banner-btns"><button type="button" class="primary" id="bkNow">Unduh cadangan</button><button type="button" class="ghost" id="bkLater">Nanti</button></div>
+  </div>
 
   <nav class="tabs" role="tablist" aria-label="Menu" data-tab="bagi">
     <button type="button" role="tab" id="tabBagi" aria-controls="panelBagi" aria-selected="true">Bagi gaji</button>
@@ -200,7 +212,13 @@
 
   <section class="card backup" aria-labelledby="bkTitle">
     <h2 id="bkTitle">Data &amp; cadangan</h2>
-    <p class="bk-text">Data Anda hanya tersimpan di peramban perangkat ini dan tidak dikirim ke server mana pun. Data akan hilang bila riwayat atau data situs di peramban dihapus, jadi unduh cadangan secara berkala. File cadangan juga dapat dipakai untuk memindahkan data ke perangkat lain.</p>
+    <p class="bk-text">Data Anda hanya tersimpan di peramban perangkat ini dan tidak dikirim ke server mana pun. Data dapat hilang bila data situs di peramban dihapus, jadi unduh cadangan secara berkala. File cadangan juga dapat dipakai untuk memindahkan data ke perangkat lain.</p>
+    <p class="bk-meta" id="bkLast"></p>
+    <div class="install" id="installBox" hidden>
+      <strong>Pasang sebagai aplikasi</strong>
+      <small id="installText">Aplikasi yang dipasang di layar utama lebih terlindungi dari penghapusan data otomatis oleh peramban, dan tetap bisa dibuka tanpa internet.</small>
+      <button type="button" class="ghost accent" id="installBtn" hidden>Pasang aplikasi</button>
+    </div>
     <div class="row-actions">
       <button type="button" class="ghost accent" id="bkExport">Unduh cadangan</button>
       <label class="ghost bk-import" for="bkFile">Pulihkan dari cadangan</label>

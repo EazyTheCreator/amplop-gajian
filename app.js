@@ -265,7 +265,7 @@
     if (month.utang === null) month.utang = utangNow();
     localAll.settings = clone(settings);
     localAll.months[curKey] = clone(month);
-    try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); setStatus('local'); }
+    try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); setStatus('local'); if (typeof askPersist === 'function' && hasData()) askPersist(); }
     catch (e) { setStatus('err'); }
   }
   function setStatus(s){
@@ -1207,7 +1207,16 @@
   window.addEventListener('pagehide', () => { if (dirty.settings) flush('settings'); if (dirty.month) flush('month'); });
 
   /* ---------- Cadangan ---------- */
-  $('#bkExport').addEventListener('click', () => {
+  // Catatan cadangan disimpan terpisah dari data agar memulihkan cadangan tidak mengubahnya.
+  const META_KEY = 'amplop-gajian-meta';
+  function readMeta(){ try { return JSON.parse(localStorage.getItem(META_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function writeMeta(patch){ try { localStorage.setItem(META_KEY, JSON.stringify(Object.assign(readMeta(), patch))); } catch (e) {} }
+  const DAY = 86400000;
+  function hasData(){
+    const all = Object.assign({}, localAll.months, { [curKey]: month });
+    return Object.keys(all).some(k => { const m = all[k]; return m && (m.gaji || m.lain || (m.tx && m.tx.length)); });
+  }
+  function exportBackup(){
     if (dirty.settings) flush('settings'); if (dirty.month) flush('month');
     writeLocal();
     const data = { app:'amplop-gajian', versi:1, diekspor:new Date().toISOString(), settings: localAll.settings, months: localAll.months };
@@ -1217,8 +1226,57 @@
     a.href = URL.createObjectURL(blob); a.download = 'amplop-gajian-cadangan-' + stamp + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    const m = $('#bkMsg'); m.className = 'form-msg'; m.textContent = 'Cadangan diunduh. Simpan file tersebut di tempat yang aman.';
+    writeMeta({ lastBackup: Date.now() });
+    const m = $('#bkMsg'); m.className = 'form-msg'; m.textContent = 'Cadangan diunduh. Simpan file tersebut di tempat yang aman, misalnya Google Drive.';
+    renderBackupState();
+  }
+  function renderBackupState(){
+    const meta = readMeta(), now = Date.now();
+    const days = meta.lastBackup ? Math.floor((now - meta.lastBackup) / DAY) : null;
+    $('#bkLast').textContent = meta.lastBackup
+      ? 'Cadangan terakhir: ' + new Intl.DateTimeFormat('id-ID', { day:'numeric', month:'long', year:'numeric' }).format(new Date(meta.lastBackup)) + (days ? ' (' + days + ' hari lalu)' : ' (hari ini)')
+      : 'Belum pernah mengunduh cadangan.';
+    const due = hasData() && (days === null || days >= 7) && !(meta.snoozeUntil && now < meta.snoozeUntil);
+    const bn = $('#bkBanner'); bn.hidden = !due;
+    if (due) {
+      $('#bkBannerTitle').textContent = days === null ? 'Amankan data Anda' : 'Sudah ' + days + ' hari sejak cadangan terakhir';
+      $('#bkBannerText').textContent = 'Data hanya tersimpan di perangkat ini dan dapat hilang bila data peramban dibersihkan. Unduh cadangan, lalu simpan di tempat aman.';
+    }
+  }
+  $('#bkExport').addEventListener('click', exportBackup);
+  $('#bkNow').addEventListener('click', exportBackup);
+  $('#bkLater').addEventListener('click', () => { writeMeta({ snoozeUntil: Date.now() + 3 * DAY }); renderBackupState(); });
+
+  // Minta penyimpanan permanen agar peramban tidak menghapus data saat ruang penyimpanan menipis.
+  function askPersist(){
+    const meta = readMeta();
+    if (meta.persistAsked || !navigator.storage || !navigator.storage.persist) return;
+    writeMeta({ persistAsked: true });
+    navigator.storage.persist().catch(() => {});
+  }
+
+  // Pemasangan sebagai aplikasi (PWA)
+  const standalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  let installEvt = null;
+  function renderInstall(){
+    const box = $('#installBox');
+    if (standalone()) { box.hidden = true; return; }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (installEvt) { box.hidden = false; $('#installBtn').hidden = false; }
+    else if (ios) {
+      box.hidden = false; $('#installBtn').hidden = true;
+      $('#installText').textContent = 'Di iPhone atau iPad: buka di Safari, ketuk tombol Bagikan, lalu pilih "Tambahkan ke Layar Utama". Aplikasi yang dipasang lebih terlindungi dari penghapusan data otomatis dan tetap bisa dibuka tanpa internet.';
+    } else box.hidden = true;
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; renderInstall(); });
+  $('#installBtn').addEventListener('click', async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch (e) {}
+    installEvt = null; renderInstall();
   });
+  window.addEventListener('appinstalled', () => { installEvt = null; renderInstall(); });
+
   let bkPending = null;
   $('#bkFile').addEventListener('change', e => {
     const f = e.target.files && e.target.files[0]; e.target.value = '';
@@ -1262,4 +1320,9 @@
   renderAll();
   flow($('#panelBagi'));
   setStatus('local');
+  renderBackupState();
+  renderInstall();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
 })();
