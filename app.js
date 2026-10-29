@@ -301,6 +301,26 @@
     localAll.months[curKey] = clone(month);
     try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); setStatus('local'); if (typeof askPersist === 'function' && hasData()) askPersist(); }
     catch (e) { setStatus('err'); }
+    publishDapur();
+  }
+  // Ringkasan amplop dapur bulan berjalan untuk aplikasi Menu Masak Mingguan, yang berada di origin
+  // yang sama (eazythecreator.github.io) sehingga dapat membacanya langsung dari perangkat ini.
+  const SHARE_KEY = 'amplop-gajian-dapur';
+  function publishDapur(){
+    if (curKey !== realKey) return;
+    try {
+      const p = settings.pos.find(x => x.id === 'k2' || x.id === 'u2') || settings.pos.find(x => /dapur|makan/i.test(x.name || ''));
+      if (!p) { localStorage.removeItem(SHARE_KEY); return; }
+      const inc = income(), sp = spentBy();
+      const items = p.type === 'rinci'
+        ? p.items.map(x => ({ n: x.name || 'Tanpa nama', pagu: inc ? itemAmt(p, x, inc) : 0, terpakai: sp[p.id + '|' + x.id] || 0 }))
+        : [{ n: p.name || 'Dapur & makan', pagu: inc ? allocOf(p, inc) : 0, terpakai: sp[p.id] || 0 }];
+      const known = items.reduce((s2, x) => s2 + x.terpakai, 0);
+      localStorage.setItem(SHARE_KEY, JSON.stringify({
+        v: 1, bulan: realKey, diperbarui: new Date().toISOString(), nama: p.name || 'Dapur & makan',
+        pagu: inc ? allocOf(p, inc) : 0, items, lain: Math.max(0, (sp[p.id] || 0) - known), belumIsi: !inc
+      }));
+    } catch (e) {}
   }
   function setStatus(s){
     const el = $('#status');
@@ -1054,6 +1074,7 @@
     if (!$('#panelCatat').hidden) renderCatat();
     if (!$('#panelLapor').hidden) renderReport();
     renderSummary();
+    publishDapur();
   }
 
   /* ---------- Interaksi ---------- */

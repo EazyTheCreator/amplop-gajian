@@ -11,6 +11,7 @@ Aplikasi web sederhana untuk membagi gaji ke amplop anggaran dan mencatat pengel
 - Laporan: grafik 6 bulan, pengeluaran per amplop, pencarian, ekspor CSV
 - Data hanya tersimpan di perangkat pengguna; pengingat cadangan, pulihkan dari cadangan
 - Bisa dipasang di layar utama dan dibuka tanpa internet
+- Membagikan ringkasan amplop Dapur & makan bulan berjalan ke [Menu Masak Mingguan](https://eazythecreator.github.io/menu-kost/) di perangkat yang sama
 
 Buka aplikasinya di: https://eazythecreator.github.io/amplop-gajian/
 

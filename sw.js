@@ -1,6 +1,6 @@
 // Service worker Amplop Gajian: mengambil versi terbaru saat daring,
 // dan memakai salinan tersimpan saat luring.
-const CACHE = 'amplop-gajian-v3';
+const CACHE = 'amplop-gajian-v4';
 const SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest', './privasi.html',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon-64.png',
