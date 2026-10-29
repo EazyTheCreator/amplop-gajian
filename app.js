@@ -306,10 +306,11 @@
   // Ringkasan amplop dapur bulan berjalan untuk aplikasi Menu Masak Mingguan, yang berada di origin
   // yang sama (eazythecreator.github.io) sehingga dapat membacanya langsung dari perangkat ini.
   const SHARE_KEY = 'amplop-gajian-dapur';
+  const dapurPos = () => settings.pos.find(x => x.id === 'k2' || x.id === 'u2') || settings.pos.find(x => /dapur|makan/i.test(x.name || ''));
   function publishDapur(){
     if (curKey !== realKey) return;
     try {
-      const p = settings.pos.find(x => x.id === 'k2' || x.id === 'u2') || settings.pos.find(x => /dapur|makan/i.test(x.name || ''));
+      const p = dapurPos();
       if (!p) { localStorage.removeItem(SHARE_KEY); return; }
       const inc = income(), sp = spentBy();
       const items = p.type === 'rinci'
@@ -1339,6 +1340,7 @@
       if (t) Object.assign(t, { date, posId, itemId, desc, amt });
     }
     if (!t) { t = { id: newId(), date, posId, itemId, desc, amt }; month.tx.push(t); }
+    if (fromMenu && !editingTx) { confirmMenu(fromMenu, amt, date); fromMenu = null; }
     const wasEdit = !!editingTx;
     saveMonth();
     stopEdit();
@@ -1681,6 +1683,48 @@
     const m = $('#bkMsg'); m.className = 'form-msg'; m.textContent = 'Data berhasil dipulihkan dari cadangan.';
   });
 
+  /* ---------- Isian dari Menu Masak Mingguan ---------- */
+  // Menu Masak membuka halaman ini dengan alamat #catat?jumlah=…&ket=…&ref=… agar belanja mingguan
+  // tinggal diperiksa lalu dicatat. Tidak ada yang dicatat otomatis tanpa ketukan pengguna.
+  const MENU_CONFIRM_KEY = 'menu-kost-dicatat';
+  let fromMenu = null;
+  function confirmMenu(ref, amt, date){
+    try {
+      const o = JSON.parse(localStorage.getItem(MENU_CONFIRM_KEY) || '{}') || {};
+      o[ref] = { amt, date, t: Date.now() };
+      localStorage.setItem(MENU_CONFIRM_KEY, JSON.stringify(o));
+    } catch (e) {}
+  }
+  function prefillFromMenu(){
+    const h = location.hash || '';
+    if (!/^#catat\?/.test(h)) return;
+    const q = new URLSearchParams(h.slice(7));
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    const amt = digits(q.get('jumlah') || ''), ket = (q.get('ket') || '').slice(0, 120), ref = (q.get('ref') || '').slice(0, 20);
+    if (curKey !== realKey) { const [ry, rm] = realKey.split('-').map(Number); shiftMonth((ry - curY) * 12 + (rm - curM)); }
+    if (editingTx) stopEdit();
+    setTab('catat');
+    const msg = $('#txMsg');
+    const p = dapurPos();
+    if (!p) { msg.className = 'form-msg bad'; msg.textContent = 'Amplop Dapur & makan tidak ditemukan. Pilih amplop secara manual.'; }
+    else {
+      const it = p.type === 'rinci' ? (p.items.find(x => /lauk|sayur|belanja/i.test(x.name || '')) || p.items[0]) : null;
+      $('#txPos').value = p.id + '|' + (it ? it.id : '');
+    }
+    if (amt) $('#txAmt').value = fmt(amt);
+    if (ket) $('#txDesc').value = ket;
+    $('#txDate').value = todayStr();
+    renderCats(); renderDate();
+    const dup = ket && month.tx.find(t => t.desc === ket);
+    fromMenu = ref || null;
+    msg.className = dup ? 'form-msg bad' : 'form-msg';
+    msg.textContent = dup
+      ? 'Perhatian: belanja ini tampaknya sudah dicatat pada ' + dup.date.split('-').reverse().join('/') + ' sebesar ' + rp(dup.amt) + '. Jangan dicatat dua kali.'
+      : 'Diisi dari Menu Masak. Periksa amplop, nominal, dan tanggal, lalu ketuk Catat pengeluaran.';
+    $('#txForm').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+  }
+  window.addEventListener('hashchange', prefillFromMenu);
+
   /* ---------- Mulai ---------- */
   readLocal();
   if (localAll.settings) globalS = normSettings(localAll.settings);
@@ -1695,6 +1739,7 @@
   setStatus('local');
   renderBackupState();
   renderInstall();
+  prefillFromMenu();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
