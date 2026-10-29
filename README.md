@@ -2,11 +2,15 @@
 
 Aplikasi web sederhana untuk membagi gaji ke amplop anggaran dan mencatat pengeluaran bulanan.
 
-- Template **Anak kost** dan **Umum**, lengkap dengan rincian per amplop
-- Acuan persentase ideal dan tombol bagi otomatis
-- Pencatatan pengeluaran per amplop dan per rincian
-- Data tersimpan di peramban perangkat masing-masing pengguna (tanpa login, tanpa server)
-- Cadangan dan pemulihan data melalui file `.json`
+- Template **Anak kost** dan **Umum**, skema gaji **bulanan** atau **mingguan**
+- Pembagian otomatis berdasarkan acuan umum (adaptasi pola 50/30/20); nominal yang diubah dikunci dan amplop lain menyesuaikan
+- Kolom utang dengan sisa pokok dan perkiraan bulan lunas
+- Sisa uang bulan lalu otomatis terbawa (masuk tabungan atau ikut dibagi)
+- Rencana tiap bulan dibekukan setelah bulan berlalu sehingga riwayat tidak berubah
+- Pencatatan pengeluaran visual, bisa diubah, dan pencocokan dengan saldo sebenarnya
+- Laporan: grafik 6 bulan, pengeluaran per amplop, pencarian, ekspor CSV
+- Data hanya tersimpan di perangkat pengguna; pengingat cadangan, pulihkan dari cadangan
+- Bisa dipasang di layar utama dan dibuka tanpa internet
 
 Buka aplikasinya di: https://eazythecreator.github.io/amplop-gajian/
 
