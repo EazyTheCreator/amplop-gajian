@@ -248,7 +248,7 @@
       gajiMinggu: Number(d.gajiMinggu) || 0,
       plan: d.plan && typeof d.plan === 'object' ? d.plan : null,
       minggu: Math.max(0, Math.min(6, Number(d.minggu) || 0)),
-      tx: (Array.isArray(d.tx) ? d.tx : []).map(t => ({ id:String(t.id), date:String(t.date || ''), posId:String(t.posId || ''), itemId:String(t.itemId || ''), desc:String(t.desc || ''), amt: Number(t.amt) || 0 }))
+      tx: (Array.isArray(d.tx) ? d.tx : []).map(t => ({ id:String(t.id), date:String(t.date || ''), posId:String(t.posId || ''), itemId:String(t.itemId || ''), desc:String(t.desc || ''), amt: Number(t.amt) || 0, ref: typeof t.ref === 'string' ? t.ref.slice(0, 20) : '' }))
     };
   }
 
@@ -301,7 +301,7 @@
     localAll.months[curKey] = clone(month);
     try { localStorage.setItem(LS_KEY, JSON.stringify(localAll)); setStatus('local'); if (typeof askPersist === 'function' && hasData()) askPersist(); }
     catch (e) { setStatus('err'); }
-    publishDapur();
+    publishDapur(); publishMenu();
   }
   // Ringkasan amplop dapur bulan berjalan untuk aplikasi Menu Masak Mingguan, yang berada di origin
   // yang sama (eazythecreator.github.io) sehingga dapat membacanya langsung dari perangkat ini.
@@ -321,6 +321,20 @@
         v: 1, bulan: realKey, diperbarui: new Date().toISOString(), nama: p.name || 'Dapur & makan',
         pagu: inc ? allocOf(p, inc) : 0, items, lain: Math.max(0, (sp[p.id] || 0) - known), belumIsi: !inc
       }));
+    } catch (e) {}
+  }
+  // Daftar pengeluaran yang berasal dari Menu Masak (tiga bulan terakhir). Menu Masak membaca daftar ini
+  // untuk status "sudah dicatat", sehingga menghapus atau mengubah catatan di sini langsung ikut tercermin.
+  const MENU_KEY = 'amplop-gajian-menu';
+  function publishMenu(){
+    try {
+      const from = addMonths(realKey, -2), out = [];
+      const all = Object.assign({}, localAll.months, { [curKey]: month });
+      Object.keys(all).filter(k => /^\d{4}-\d{2}$/.test(k) && k >= from).forEach(k => {
+        const m = all[k]; if (!m || !Array.isArray(m.tx)) return;
+        m.tx.forEach(t => { if (t.ref || /\(Menu Masak\)$/.test(t.desc || '')) out.push({ ref: t.ref || '', ket: t.desc || '', amt: Number(t.amt) || 0, date: t.date }); });
+      });
+      localStorage.setItem(MENU_KEY, JSON.stringify({ v: 1, diperbarui: new Date().toISOString(), catatan: out }));
     } catch (e) {}
   }
   function setStatus(s){
@@ -1075,7 +1089,7 @@
     if (!$('#panelCatat').hidden) renderCatat();
     if (!$('#panelLapor').hidden) renderReport();
     renderSummary();
-    publishDapur();
+    publishDapur(); publishMenu();
   }
 
   /* ---------- Interaksi ---------- */
@@ -1339,8 +1353,8 @@
       t = month.tx.find(x => x.id === editingTx);
       if (t) Object.assign(t, { date, posId, itemId, desc, amt });
     }
-    if (!t) { t = { id: newId(), date, posId, itemId, desc, amt }; month.tx.push(t); }
-    if (fromMenu && !editingTx) { confirmMenu(fromMenu, amt, date); fromMenu = null; }
+    if (!t) { t = { id: newId(), date, posId, itemId, desc, amt, ref: fromMenu || '' }; month.tx.push(t); }
+    fromMenu = null;
     const wasEdit = !!editingTx;
     saveMonth();
     stopEdit();
@@ -1686,17 +1700,17 @@
   /* ---------- Isian dari Menu Masak Mingguan ---------- */
   // Menu Masak membuka halaman ini dengan alamat #catat?jumlah=…&ket=…&ref=… agar belanja mingguan
   // tinggal diperiksa lalu dicatat. Tidak ada yang dicatat otomatis tanpa ketukan pengguna.
-  const MENU_CONFIRM_KEY = 'menu-kost-dicatat';
   let fromMenu = null;
-  function confirmMenu(ref, amt, date){
-    try {
-      const o = JSON.parse(localStorage.getItem(MENU_CONFIRM_KEY) || '{}') || {};
-      o[ref] = { amt, date, t: Date.now() };
-      localStorage.setItem(MENU_CONFIRM_KEY, JSON.stringify(o));
-    } catch (e) {}
-  }
   function prefillFromMenu(){
     const h = location.hash || '';
+    if (h === '#riwayat') {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      if (curKey !== realKey) { const [ry, rm] = realKey.split('-').map(Number); shiftMonth((ry - curY) * 12 + (rm - curM)); }
+      setTab('catat');
+      const m = $('#txMsg'); m.className = 'form-msg'; m.textContent = 'Ketuk catatan belanja di Riwayat untuk mengubah atau menghapusnya.';
+      setTimeout(() => $('#txList').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }), 120);
+      return;
+    }
     if (!/^#catat\?/.test(h)) return;
     const q = new URLSearchParams(h.slice(7));
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
@@ -1715,7 +1729,7 @@
     if (ket) $('#txDesc').value = ket;
     $('#txDate').value = todayStr();
     renderCats(); renderDate();
-    const dup = ket && month.tx.find(t => t.desc === ket);
+    const dup = month.tx.find(t => (ref && t.ref === ref) || (ket && t.desc === ket));
     fromMenu = ref || null;
     msg.className = dup ? 'form-msg bad' : 'form-msg';
     msg.textContent = dup
